@@ -12,7 +12,7 @@
 @interface MandelView : NSView
     @property (weak) IBOutlet NSImageView *imageView;
 
-    -(void) print;
+    -(void) setImage:(NSImage*) imageObj;
 @end
 
 #endif /* MandelView_h */

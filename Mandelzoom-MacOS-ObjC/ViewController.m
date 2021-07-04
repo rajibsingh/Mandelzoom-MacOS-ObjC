@@ -6,6 +6,7 @@
 //
 
 #import "ViewController.h"
+#import "MandelView.h"
 
 
 @implementation ViewController
@@ -14,17 +15,13 @@
     printf("%s", sender);
     _statusLabel.stringValue = @"clicked";
     NSImage* imageObj = [NSImage imageNamed:@"klarion"];
-    _imageView.image = imageObj;
+    [_mandelView setImage:imageObj];
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    NSLog(@"*** using the NSLog method");
-    _mandelView.print;
-
     // Do any additional setup after loading the view.
 }
-
 
 - (void)setRepresentedObject:(id)representedObject {
     [super setRepresentedObject:representedObject];

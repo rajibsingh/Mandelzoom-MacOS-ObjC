@@ -10,8 +10,10 @@
 
 @implementation MandelView
 
--(void) print {
+-(void) setImage:(NSImage*) imageObj {
    NSLog(@"called print method in MandelView");
+//    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
+    _imageView.image = imageObj;
 }
 
 @end
