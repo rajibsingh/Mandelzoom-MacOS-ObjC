@@ -12,6 +12,7 @@
 		350E5F0C2690EFB500967E1D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 350E5F0B2690EFB500967E1D /* Assets.xcassets */; };
 		350E5F0F2690EFB500967E1D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 350E5F0D2690EFB500967E1D /* Main.storyboard */; };
 		350E5F122690EFB500967E1D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F112690EFB500967E1D /* main.m */; };
+		350E5F1B2691E91700967E1D /* MandelView.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F1A2691E91700967E1D /* MandelView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,9 @@
 		350E5F102690EFB500967E1D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		350E5F112690EFB500967E1D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		350E5F132690EFB500967E1D /* Mandelzoom_MacOS_ObjC.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Mandelzoom_MacOS_ObjC.entitlements; sourceTree = "<group>"; };
+		350E5F1A2691E91700967E1D /* MandelView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MandelView.m; sourceTree = "<group>"; };
+		350E5F1C2691E95000967E1D /* MandelView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelView.h; sourceTree = "<group>"; };
+		350E5F1F269213ED00967E1D /* MandelView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelView.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +45,7 @@
 		350E5EF92690EFB200967E1D = {
 			isa = PBXGroup;
 			children = (
+				350E5F1C2691E95000967E1D /* MandelView.h */,
 				350E5F042690EFB200967E1D /* Mandelzoom-MacOS-ObjC */,
 				350E5F032690EFB200967E1D /* Products */,
 			);
@@ -61,11 +66,13 @@
 				350E5F062690EFB200967E1D /* AppDelegate.m */,
 				350E5F082690EFB200967E1D /* ViewController.h */,
 				350E5F092690EFB200967E1D /* ViewController.m */,
-				350E5F0B2690EFB500967E1D /* Assets.xcassets */,
-				350E5F0D2690EFB500967E1D /* Main.storyboard */,
 				350E5F102690EFB500967E1D /* Info.plist */,
 				350E5F112690EFB500967E1D /* main.m */,
+				350E5F0B2690EFB500967E1D /* Assets.xcassets */,
 				350E5F132690EFB500967E1D /* Mandelzoom_MacOS_ObjC.entitlements */,
+				350E5F0D2690EFB500967E1D /* Main.storyboard */,
+				350E5F1A2691E91700967E1D /* MandelView.m */,
+				350E5F1F269213ED00967E1D /* MandelView.h */,
 			);
 			path = "Mandelzoom-MacOS-ObjC";
 			sourceTree = "<group>";
@@ -141,6 +148,7 @@
 				350E5F0A2690EFB200967E1D /* ViewController.m in Sources */,
 				350E5F122690EFB500967E1D /* main.m in Sources */,
 				350E5F072690EFB200967E1D /* AppDelegate.m in Sources */,
+				350E5F1B2691E91700967E1D /* MandelView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

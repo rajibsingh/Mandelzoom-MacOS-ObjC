@@ -7,10 +7,19 @@
 
 #import "ViewController.h"
 
+
 @implementation ViewController
+- (IBAction)buttonAction:(id)sender {
+    printf("button clicked");
+    printf("%s", sender);
+    _statusLabel.stringValue = @"clicked";
+    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
+    _imageView.image = imageObj;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    NSLog(@"*** using the NSLog method");
 
     // Do any additional setup after loading the view.
 }
@@ -21,6 +30,7 @@
 
     // Update the view, if already loaded.
 }
+
 
 
 @end
