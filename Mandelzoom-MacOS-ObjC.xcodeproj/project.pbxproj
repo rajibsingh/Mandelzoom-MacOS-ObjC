@@ -27,7 +27,6 @@
 		350E5F112690EFB500967E1D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		350E5F132690EFB500967E1D /* Mandelzoom_MacOS_ObjC.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Mandelzoom_MacOS_ObjC.entitlements; sourceTree = "<group>"; };
 		350E5F1A2691E91700967E1D /* MandelView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MandelView.m; sourceTree = "<group>"; };
-		350E5F1C2691E95000967E1D /* MandelView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelView.h; sourceTree = "<group>"; };
 		350E5F1F269213ED00967E1D /* MandelView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelView.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -45,7 +44,6 @@
 		350E5EF92690EFB200967E1D = {
 			isa = PBXGroup;
 			children = (
-				350E5F1C2691E95000967E1D /* MandelView.h */,
 				350E5F042690EFB200967E1D /* Mandelzoom-MacOS-ObjC */,
 				350E5F032690EFB200967E1D /* Products */,
 			);
