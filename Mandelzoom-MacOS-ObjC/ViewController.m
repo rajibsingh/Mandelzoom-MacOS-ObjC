@@ -20,6 +20,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     NSLog(@"*** using the NSLog method");
+    _mandelView.print;
 
     // Do any additional setup after loading the view.
 }

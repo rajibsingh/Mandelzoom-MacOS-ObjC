@@ -7,3 +7,11 @@
 
 #import <Foundation/Foundation.h>
 #import "MandelView.h"
+
+@implementation MandelView
+
+-(void) print {
+   NSLog(@"called print method in MandelView");
+}
+
+@end

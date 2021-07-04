@@ -732,6 +732,9 @@
                                 </textFieldCell>
                             </textField>
                         </subviews>
+                        <connections>
+                            <outlet property="imageView" destination="avH-Q3-zBm" id="Heg-WD-5zL"/>
+                        </connections>
                     </view>
                     <connections>
                         <outlet property="imageView" destination="avH-Q3-zBm" id="cUS-fX-txJ"/>
