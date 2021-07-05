@@ -7,13 +7,16 @@
 
 #import <Foundation/Foundation.h>
 #import "MandelView.h"
+#import "MandelRenderer.h"
 
 @implementation MandelView
 
 -(void) setImage:(NSImage*) imageObj {
-   NSLog(@"called print method in MandelView");
-//    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
+   NSLog(@"called setImage method in MandelView");
     _imageView.image = imageObj;
+    MandelRenderer *renderer = [[MandelRenderer alloc] init];
+    NSString *result = [renderer render];
+    NSLog(result);
 }
 
 @end
