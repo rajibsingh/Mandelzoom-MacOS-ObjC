@@ -10,12 +10,17 @@
 
 @implementation MandelRenderer
 {
-    double tl;
-    double br;
+    double tl, br;
+    int THRESHOLD, MAXITERATIONS;
+}
+
+-(void) setup {
+    THRESHOLD=10;
+    MAXITERATIONS=100;
 }
 
 -(NSString*) render {
-    NSString *result = [[NSString alloc] initWithString: @"666"];
+    NSString *result = [[NSString alloc] initWithString:@"666"];
     return result;
 }
 
