@@ -19,9 +19,10 @@
     MAXITERATIONS=100;
 }
 
--(NSString*) render {
-    NSString *result = [[NSString alloc] initWithString:@"666"];
-    return result;
+-(NSImage*) render {
+    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
+    return imageObj;
+    
 }
 
 @end

@@ -11,9 +11,8 @@
 
 @interface MandelRenderer:NSObject
 
--(NSString*) render;
+-(NSImage*) render;
     
-
 @end
 
 #endif /* MandelRenderer_h */

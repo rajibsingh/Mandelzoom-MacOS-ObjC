@@ -11,16 +11,12 @@
 
 @implementation MandelView
 
--(void) setImage:(NSImage*) imageObj {
-   NSLog(@"called setImage method in MandelView");
-    _imageView.image = imageObj;
-    MandelRenderer *renderer = [[MandelRenderer alloc] init];
-    NSString *result = [renderer render];
-    NSLog(result);
-}
 
 -(void) refresh {
     NSLog(@"*** refresh method");
+    MandelRenderer *renderer = [[MandelRenderer alloc] init];
+    _imageView.image = [renderer render];
+    
 }
 
 @end
