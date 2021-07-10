@@ -13,6 +13,7 @@
     @property (weak) IBOutlet NSImageView *imageView;
 
     -(void) setImage:(NSImage*) imageObj;
+    -(void) refresh;
 @end
 
 #endif /* MandelView_h */

@@ -19,4 +19,8 @@
     NSLog(result);
 }
 
+-(void) refresh {
+    NSLog(@"*** refresh method");
+}
+
 @end

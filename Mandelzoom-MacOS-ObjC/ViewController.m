@@ -14,8 +14,9 @@
     printf("button clicked");
     printf("%s", sender);
     _statusLabel.stringValue = @"clicked";
-    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
-    [_mandelView setImage:imageObj];
+    [_mandelView refresh];
+//    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
+//    [_mandelView setImage:imageObj];
 }
 
 - (void)viewDidLoad {
