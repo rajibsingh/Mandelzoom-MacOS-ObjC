@@ -10,7 +10,6 @@
 
 @interface ViewController : NSViewController
 @property (weak) IBOutlet NSTextFieldCell *statusLabel;
-@property (weak) IBOutlet NSImageView *imageView;
 @property (strong) IBOutlet MandelView *mandelView;
 
 

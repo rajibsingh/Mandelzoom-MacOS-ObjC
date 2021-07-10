@@ -12,8 +12,9 @@
 
 @interface MandelView : NSView
     @property (weak) IBOutlet NSImageView *imageView;
-    @property (weak) MandelRenderer *renderer;
 
+
+-(void) setImage;
     -(void) refresh;
 @end
 

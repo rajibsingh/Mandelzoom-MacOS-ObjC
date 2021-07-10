@@ -15,13 +15,11 @@
     printf("%s", sender);
     _statusLabel.stringValue = @"clicked";
     [_mandelView refresh];
-//    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
-//    [_mandelView setImage:imageObj];
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
+    [_mandelView setImage];
 }
 
 - (void)setRepresentedObject:(id)representedObject {

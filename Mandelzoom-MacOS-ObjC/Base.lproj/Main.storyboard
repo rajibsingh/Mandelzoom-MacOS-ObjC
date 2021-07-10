@@ -737,7 +737,6 @@
                         </connections>
                     </view>
                     <connections>
-                        <outlet property="imageView" destination="avH-Q3-zBm" id="cUS-fX-txJ"/>
                         <outlet property="mandelView" destination="m2S-Jp-Qdl" id="xjr-yW-iYU"/>
                         <outlet property="statusLabel" destination="Xcn-hf-hsV" id="CGG-Hr-bcO"/>
                     </connections>
