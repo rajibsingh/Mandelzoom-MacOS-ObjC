@@ -30,9 +30,9 @@
     for (x = 0; x < 1000;x++) {
         for (y = 0; y < 1000; y++) {
             struct pixel pxl = data[x][y];
-            pxl.rChannel += x;
-            pxl.gChannel += y;
-            pxl.bChannel += x+y;
+            pxl.rChannel = x % 100;
+            pxl.gChannel = y;
+            pxl.bChannel = 125;
             pxl.aChannel = 255;
             data[x][y] = pxl;
         }
@@ -44,8 +44,6 @@
     [self setup];
     int width = 1000;
     int height = 1000;
-
-//    struct pixel data[1000][1000];
     size_t bufferLength = width * height * 4;
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
     size_t bitsPerComponent = 8;
