@@ -30,9 +30,9 @@
     for (x = 0; x < 1000;x++) {
         for (y = 0; y < 1000; y++) {
             struct pixel pxl = data[x][y];
-            pxl.rChannel += 1;
-            pxl.gChannel += 2;
-            pxl.bChannel += 3;
+            pxl.rChannel += x;
+            pxl.gChannel += y;
+            pxl.bChannel += x+y;
             pxl.aChannel = 255;
             data[x][y] = pxl;
         }
