@@ -31,7 +31,7 @@
         for (y = 0; y < 1000; y++) {
             struct pixel pxl = data[x][y];
             pxl.rChannel = x % 100;
-            pxl.gChannel = y;
+            pxl.gChannel <<= 10;
             pxl.bChannel = 125;
             pxl.aChannel = 255;
             data[x][y] = pxl;
