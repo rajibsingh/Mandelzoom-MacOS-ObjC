@@ -12,18 +12,40 @@
 {
     double tl, br;
     int THRESHOLD, MAXITERATIONS;
+    
+    struct pixel {
+        UInt8 rChannel;
+        UInt8 gChannel;
+        UInt8 bChannel;
+        UInt8 aChannel;
+    };
+    
+    struct pixel data[1000][1000];
 }
 
 -(void) setup {
     THRESHOLD=10;
     MAXITERATIONS=100;
+    int x,y;
+    for (x = 0; x < 1000;x++) {
+        for (y = 0; y < 1000; y++) {
+            struct pixel pxl = data[x][y];
+            pxl.rChannel += 1;
+            pxl.gChannel += 2;
+            pxl.bChannel += 3;
+            pxl.aChannel = 255;
+            data[x][y] = pxl;
+        }
+    }
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
 -(NSImage*) render {
+    [self setup];
     int width = 1000;
     int height = 1000;
-    int data[1000][1000];
+
+//    struct pixel data[1000][1000];
     size_t bufferLength = width * height * 4;
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
     size_t bitsPerComponent = 8;

@@ -10,6 +10,13 @@
 #import "MandelRenderer.h"
 
 @implementation MandelView
+{
+    MandelRenderer *renderer;
+}
+
+//-(void) setUp {
+//    *renderer = [[MandelRenderer alloc] init];
+//}
 
 -(void) setImage {
     NSImage* imageObj = [NSImage imageNamed:@"klarion"];
@@ -19,7 +26,7 @@
 -(void) refresh {
     NSLog(@"*** refresh method");
     MandelRenderer *renderer = [[MandelRenderer alloc] init];
-//    _imageView.image = [renderer render];
+    _imageView.image = [renderer render];
     
 }
 
