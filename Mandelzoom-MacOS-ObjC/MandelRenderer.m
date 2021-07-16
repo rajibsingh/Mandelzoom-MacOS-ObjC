@@ -10,8 +10,9 @@
 
 @implementation MandelRenderer
 {
-    double tl, br;
+    double tl, br, stepX, stepY;
     int THRESHOLD, MAXITERATIONS;
+    UInt8 r,g,b,a;
     
     struct pixel {
         UInt8 rChannel;
@@ -29,14 +30,26 @@
     int x,y;
     for (x = 0; x < 1000;x++) {
         for (y = 0; y < 1000; y++) {
+            r = r % 2;
+            if (r == 1) {
+                r = 255;
+            }
+            g = g % 2;
+            if (g == 1) {
+                g = 255;
+            }
+            b = 0;
+            a = 255;
             struct pixel pxl = data[x][y];
-            pxl.rChannel = x % 100;
-            pxl.gChannel <<= 10;
-            pxl.bChannel = 125;
-            pxl.aChannel = 255;
+            pxl.rChannel = r;
+            pxl.gChannel = g;
+            pxl.bChannel = b;
+            pxl.aChannel = a;
             data[x][y] = pxl;
         }
     }
+    struct pixel pxl = data[2][1];
+    printf("%ir %ig %ib %ia", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
