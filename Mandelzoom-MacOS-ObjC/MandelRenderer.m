@@ -30,15 +30,18 @@
     int x,y;
     for (x = 0; x < 1000;x++) {
         for (y = 0; y < 1000; y++) {
-            r = r % 2;
-            if (r == 1) {
-                r = 255;
-            }
-            g = g % 2;
-            if (g == 1) {
-                g = 255;
-            }
+            r = x;
+            g = y;
             b = 0;
+//            r = r % 2;
+//            if (r == 1) {
+//                r = 255;
+//            }
+//            g = g % 2;
+//            if (g == 1) {
+//                g = 255;
+//            }
+//            b = 0;
             a = 255;
             struct pixel pxl = data[x][y];
             pxl.rChannel = r;
@@ -48,8 +51,10 @@
             data[x][y] = pxl;
         }
     }
-    struct pixel pxl = data[2][1];
+    struct pixel pxl = data[0][0];
     printf("%ir %ig %ib %ia", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
+    struct pixel px2 = data[999][999];
+    printf("%ir %ig %ib %ia", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
