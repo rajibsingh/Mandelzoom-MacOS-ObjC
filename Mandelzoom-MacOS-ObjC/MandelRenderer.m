@@ -10,6 +10,9 @@
 
 #include <complex.h>
 
+//use of complex type from
+//https://stackoverflow.com/questions/12980052/are-complex-numbers-already-defined-in-objective-c
+
 @implementation MandelRenderer
 {
     complex double tl, br;
@@ -28,32 +31,33 @@
 }
 
 -(void) setup {
-    complex double tl = -2.5 + 1*I;
-    complex double br = -1 + 1*I;
-    stepX = creal(br) - creal(tl) / 10000;
-    stepY = cimag(br) - cimag(tl) / 10000;
+    complex double tl = -2.5 + 1i;
+    complex double br = -1 + 1i;
+    stepX = creal(br) - creal(tl) / 1000;
+    stepY = cimag(br) - cimag(tl) / 1000;
     THRESHOLD=10;
     MAXITERATIONS=100;
-    int x,y;
-    for (x = 0; x < 1000;x++) {
-        for (y = 0; y < 1000; y++) {
-            // get some result based on running a loop        
-//            while (x*x + y*y ≤ 2*2 AND iteration < max_iteration) {
-//                    xtemp := x*x - y*y + x0
-//                    y := 2*x*y + y0
-//                    x := xtemp
-//                    iteration := iteration + 1
-//            }
-            r = 0;
-            g = x;
-            b = y;
-            a = 255;
-            struct pixel pxl = data[x][y];
-            pxl.rChannel = r;
-            pxl.gChannel = g;
-            pxl.bChannel = b;
-            pxl.aChannel = a;
-            data[x][y] = pxl;
+    int xDataPos,yDataPos;
+    for (xDataPos = 0; xDataPos < 1000; xDataPos++) {
+        for (yDataPos = 0; yDataPos < 1000; yDataPos++) {
+            double x = creal(br) + stepX * xDataPos;
+            double y = cimag(br) + stepY * yDataPos;
+            int iteration = 0;
+            while (x*x + y*y <= THRESHOLD && iteration < MAXITERATIONS) {
+                double xtemp = x*x - y*y + creal(tl);
+                y = 2*x*y + cimag(tl);
+                x = xtemp;
+                iteration++;
+            }
+            if (iteration > 0) {
+                printf("caught a non zero iteration: %i", iteration);
+            }
+            struct pixel pxl;
+            pxl.rChannel = 0;
+            pxl.gChannel = iteration;
+            pxl.bChannel = iteration;
+            pxl.aChannel = 255;
+            data[xDataPos][yDataPos] = pxl;
         }
     }
     struct pixel pxl = data[0][0];
