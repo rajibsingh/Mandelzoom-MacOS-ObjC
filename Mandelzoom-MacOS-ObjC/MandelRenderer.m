@@ -49,14 +49,37 @@
                 x = xtemp;
                 iteration++;
             }
-            if (iteration > 0) {
-                printf("caught a non zero iteration: %i", iteration);
-            }
             struct pixel pxl;
             pxl.rChannel = 0;
-            pxl.gChannel = iteration;
-            pxl.bChannel = iteration;
+            pxl.gChannel = 0;
+            pxl.bChannel = 0;
             pxl.aChannel = 255;
+            UInt8 colorDelta;
+            switch(iteration) {
+                case 100:
+                    break;
+                case 1:
+                    pxl.rChannel = 255;
+                    pxl.gChannel = 255;
+                    pxl.bChannel = 255;
+                    break;
+                case 2 ... 6:
+                    colorDelta = 255 - (42 * (7 - iteration));
+                    pxl.rChannel = 255;
+                    pxl.gChannel = colorDelta;
+                    pxl.bChannel = colorDelta;
+                    break;
+                case 7 ... 8:
+                    colorDelta = 255 - (85 * (9 - iteration));
+                    pxl.rChannel = colorDelta;
+                    pxl.gChannel = colorDelta;
+                    pxl.bChannel = 255;
+                    break;
+            }
+            if (iteration > 0) {
+                printf("caught a non zero iteration: %i\n", iteration);
+                printf("%ir %ig %ib %ia\n", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
+            }
             data[xDataPos][yDataPos] = pxl;
         }
     }
