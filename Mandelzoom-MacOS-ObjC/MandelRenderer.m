@@ -8,9 +8,12 @@
 #import <Foundation/Foundation.h>
 #import "MandelRenderer.h"
 
+#include <complex.h>
+
 @implementation MandelRenderer
 {
-    double tl, br, stepX, stepY;
+    complex double tl, br;
+    double stepX, stepY;
     int THRESHOLD, MAXITERATIONS;
     UInt8 r,g,b,a;
     
@@ -25,23 +28,25 @@
 }
 
 -(void) setup {
+    complex double tl = -2.5 + 1*I;
+    complex double br = -1 + 1*I;
+    stepX = creal(br) - creal(tl) / 10000;
+    stepY = cimag(br) - cimag(tl) / 10000;
     THRESHOLD=10;
     MAXITERATIONS=100;
     int x,y;
     for (x = 0; x < 1000;x++) {
         for (y = 0; y < 1000; y++) {
-            r = x;
-            g = y;
-            b = 0;
-//            r = r % 2;
-//            if (r == 1) {
-//                r = 255;
+            // get some result based on running a loop        
+//            while (x*x + y*y ≤ 2*2 AND iteration < max_iteration) {
+//                    xtemp := x*x - y*y + x0
+//                    y := 2*x*y + y0
+//                    x := xtemp
+//                    iteration := iteration + 1
 //            }
-//            g = g % 2;
-//            if (g == 1) {
-//                g = 255;
-//            }
-//            b = 0;
+            r = 0;
+            g = x;
+            b = y;
             a = 255;
             struct pixel pxl = data[x][y];
             pxl.rChannel = r;
