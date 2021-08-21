@@ -132,4 +132,23 @@
     return image;
 }
 
+-(NSImage*) render2 {
+    [self setup];
+    int width = 1000;
+    int height = 1000;
+    size_t bufferLength = width * height * 4;
+    CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
+    size_t bitsPerComponent = 8;
+    size_t bitsPerPixel = 32;
+    size_t bytesPerRow = 4 * width;
+    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+    
+    CGContextRef contextRef = CGBitmapContextCreate(NULL, 1000, 1000, bitsPerComponent, bytesPerRow, colorSpaceRef, bitmapInfo);
+    CGImageRef myImage;
+    myImage = CGBitmapContextCreateImage(contextRef);
+//    CGImageSourceUpdateDataProvider(myImage, provider, true);
+    NSImage *image = [[NSImage alloc] initWithCGImage:myImage size:NSMakeSize(2, 2)];
+    return image;
+}
 @end

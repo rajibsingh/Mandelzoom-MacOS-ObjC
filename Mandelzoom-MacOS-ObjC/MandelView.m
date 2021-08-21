@@ -21,12 +21,14 @@
 -(void) setImage {
     NSImage* imageObj = [NSImage imageNamed:@"klarion"];
     _imageView.image = imageObj;
+    _imageView.image = [renderer render2];
+    
 }
 
 -(void) refresh {
     NSLog(@"*** refresh method");
     MandelRenderer *renderer = [[MandelRenderer alloc] init];
-    _imageView.image = [renderer render];
+    _imageView.image = [renderer render2];
     
 }
 

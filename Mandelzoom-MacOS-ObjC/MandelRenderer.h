@@ -12,6 +12,7 @@
 @interface MandelRenderer:NSObject
 
 -(NSImage*) render;
+-(NSImage*) render2;
     
 @end
 
