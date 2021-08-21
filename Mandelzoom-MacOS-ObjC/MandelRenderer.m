@@ -60,7 +60,10 @@
 //            NSLog(@"iteration %i", iteration);
             struct pixel pxl;
             pxl.aChannel = 255;
-            UInt8 colorDelta;
+            pxl.rChannel = 0;
+            pxl.gChannel = 0;
+            pxl.bChannel = 0;
+//            UInt8 colorDelta;
             switch(iteration) {
                 case 100:
                     break;
@@ -75,16 +78,16 @@
                     pxl.bChannel = 255;
                     break;
                 case 2 ... 6:
-                    colorDelta = 255 - (42 * (7 - iteration));
+//                    colorDelta = 255 - (42 * (7 - iteration));
                     pxl.rChannel = 255;
-                    pxl.gChannel = colorDelta;
-                    pxl.bChannel = colorDelta;
+//                    pxl.gChannel = colorDelta;
+//                    pxl.bChannel = colorDelta;
                     break;
                 case 7 ... 8:
-                    colorDelta = 255 - (85 * (9 - iteration));
-                    pxl.rChannel = colorDelta;
-                    pxl.gChannel = colorDelta;
-                    pxl.bChannel = 255;
+//                    colorDelta = 255 - (85 * (9 - iteration));
+//                    pxl.rChannel = colorDelta;
+//                    pxl.gChannel = 255;
+//                    pxl.bChannel = 255;
                     break;
             }
 //            if (iteration > 0) {
@@ -95,9 +98,9 @@
         }
     }
     struct pixel px1 = data[0][0];
-    printf("%ir %ig %ib %ia", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
+    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
     struct pixel px2 = data[999][999];
-    printf("%ir %ig %ib %ia", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
+    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
@@ -112,7 +115,8 @@
     size_t bytesPerRow = 4 * width;
     CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
     CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
-    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+//    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+    CGColorRenderingIntent renderingIntent = kCGImageAlphaLast;
     CGImageRef iref = CGImageCreate(width,
                                     height,
                                     bitsPerComponent,
