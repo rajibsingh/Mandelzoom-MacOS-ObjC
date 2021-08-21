@@ -7,32 +7,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "BCB4325F-931E-49F3-98BE-A4BE7CD80EAC"
-            shouldBeEnabled = "Yes"
+            uuid = "5DFBAC66-5DA0-4FD7-A5DE-2287CD06F617"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Mandelzoom-MacOS-ObjC/MandelRenderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "117"
-            endingLineNumber = "117"
-            landmarkName = "-render"
+            startingLineNumber = "54"
+            endingLineNumber = "54"
+            landmarkName = "-setup"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "C4DFEAF7-B398-407C-8D5A-D556F94AEDA5"
+            uuid = "A413A6E1-052F-4242-A5A3-C9C5DF53E215"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Mandelzoom-MacOS-ObjC/MandelRenderer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "95"
-            endingLineNumber = "95"
-            landmarkName = "-render"
+            startingLineNumber = "46"
+            endingLineNumber = "46"
+            landmarkName = "-setup"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

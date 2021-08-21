@@ -15,8 +15,8 @@
 
 @implementation MandelRenderer
 {
-    complex double tl, br;
-    double stepX, stepY;
+    complex long double tl, br;
+    long double stepX, stepY;
     int THRESHOLD, MAXITERATIONS;
     UInt8 r,g,b,a;
     
@@ -31,32 +31,43 @@
 }
 
 -(void) setup {
-    complex double tl = -2.5 + 1i;
-    complex double br = -1 + 1i;
-    stepX = creal(br) - creal(tl) / 1000;
-    stepY = cimag(br) - cimag(tl) / 1000;
+    complex long double tl = -2L + 2Li;
+    complex long double br = 2L - 2Li;
+//    complex long double tl = 1L + 1Li;
+//    complex long double br = 2L - 1Li;
+    NSLog(@"tl -> real=%le, imag=%le", creal(tl), cimag(tl));
+    NSLog(@"br -> real=%le, imag=%le", creal(br), cimag(br));
+    stepX = fabsl(creal(br) - creal(tl)) / 1000.0L;
+    stepY = fabsl(cimag(br) - cimag(tl)) / 1000.0L;
+    NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
     THRESHOLD=10;
-    MAXITERATIONS=100;
-    int xDataPos,yDataPos;
+    MAXITERATIONS=1000;
+    int xDataPos, yDataPos;
     for (xDataPos = 0; xDataPos < 1000; xDataPos++) {
         for (yDataPos = 0; yDataPos < 1000; yDataPos++) {
-            double x = creal(br) + stepX * xDataPos;
-            double y = cimag(br) + stepY * yDataPos;
+            long double x = creal(tl) + stepX * xDataPos;
+            long double y = cimag(tl) + stepY * yDataPos;
+            complex long double origNumVal = x + y * I;
+//            NSLog(@"origNumVal -> real=%f, imag=%f", creal(origNumVal), cimag(origNumVal));
+            complex long double currNumVal = x + y * I;
             int iteration = 0;
-            while (x*x + y*y <= THRESHOLD && iteration < MAXITERATIONS) {
-                double xtemp = x*x - y*y + creal(tl);
-                y = 2*x*y + cimag(tl);
-                x = xtemp;
+            while (creal(currNumVal) * creal(currNumVal) + cimag(currNumVal) + cimag(currNumVal) <= THRESHOLD
+                   && iteration < MAXITERATIONS) {
                 iteration++;
+                currNumVal = currNumVal * currNumVal + origNumVal;
+//                NSLog(@"currNumVal -> real=%f, imag=%f", creal(currNumVal), cimag(currNumVal));
             }
+//            NSLog(@"iteration %i", iteration);
             struct pixel pxl;
-            pxl.rChannel = 0;
-            pxl.gChannel = 0;
-            pxl.bChannel = 0;
             pxl.aChannel = 255;
             UInt8 colorDelta;
             switch(iteration) {
                 case 100:
+                    break;
+                case 0:
+                    pxl.rChannel = 0;
+                    pxl.gChannel = 0;
+                    pxl.bChannel = 0;
                     break;
                 case 1:
                     pxl.rChannel = 255;
@@ -76,15 +87,15 @@
                     pxl.bChannel = 255;
                     break;
             }
-            if (iteration > 0) {
-                printf("caught a non zero iteration: %i\n", iteration);
-                printf("%ir %ig %ib %ia\n", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
-            }
+//            if (iteration > 0) {
+//                NSLog(@"caught a non zero iteration: %i\n", iteration);
+//                NSLog(@"%ir %ig %ib %ia\n", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
+//            }
             data[xDataPos][yDataPos] = pxl;
         }
     }
-    struct pixel pxl = data[0][0];
-    printf("%ir %ig %ib %ia", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
+    struct pixel px1 = data[0][0];
+    printf("%ir %ig %ib %ia", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
     struct pixel px2 = data[999][999];
     printf("%ir %ig %ib %ia", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
 }
