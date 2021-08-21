@@ -147,7 +147,8 @@
     CGContextRef contextRef = CGBitmapContextCreate(NULL, 1000, 1000, bitsPerComponent, bytesPerRow, colorSpaceRef, bitmapInfo);
     CGImageRef myImage;
     myImage = CGBitmapContextCreateImage(contextRef);
-//    CGImageSourceUpdateDataProvider(myImage, provider, true);
+    CGImageSourceRef imageSrcRef = myImage;
+    CGImageSourceUpdateDataProvider(imageSrcRef, provider, true);
     NSImage *image = [[NSImage alloc] initWithCGImage:myImage size:NSMakeSize(2, 2)];
     return image;
 }
