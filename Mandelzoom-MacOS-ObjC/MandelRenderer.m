@@ -15,38 +15,36 @@
 
 @implementation MandelRenderer
 {
-    complex long double tl, br;
+    complex long double bl, tr;
     long double stepX, stepY;
     int THRESHOLD, MAXITERATIONS;
     UInt8 r,g,b,a;
     
     struct pixel {
+        UInt8 aChannel;
         UInt8 rChannel;
         UInt8 gChannel;
         UInt8 bChannel;
-        UInt8 aChannel;
     };
     
     struct pixel data[1000][1000];
 }
 
 -(void) setup {
-    complex long double tl = -2L + 2Li;
-    complex long double br = 2L - 2Li;
-//    complex long double tl = 1L + 1Li;
-//    complex long double br = 2L - 1Li;
-    NSLog(@"tl -> real=%le, imag=%le", creal(tl), cimag(tl));
-    NSLog(@"br -> real=%le, imag=%le", creal(br), cimag(br));
-    stepX = fabsl(creal(br) - creal(tl)) / 1000.0L;
-    stepY = fabsl(cimag(br) - cimag(tl)) / 1000.0L;
+    complex long double bl = -2L - 2Li;
+    complex long double tr = 2L + 2Li;
+    NSLog(@"bl -> real=%le, imag=%le", creal(bl), cimag(bl));
+    NSLog(@"tr -> real=%le, imag=%le", creal(tr), cimag(tr));
+    stepX = fabsl(creal(tr) - creal(bl)) / 1000L;
+    stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
     NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
     THRESHOLD=10;
     MAXITERATIONS=1000;
     int xDataPos, yDataPos;
     for (xDataPos = 0; xDataPos < 1000; xDataPos++) {
         for (yDataPos = 0; yDataPos < 1000; yDataPos++) {
-            long double x = creal(tl) + stepX * xDataPos;
-            long double y = cimag(tl) + stepY * yDataPos;
+            long double x = creal(bl) + stepX * xDataPos;
+            long double y = cimag(bl) + stepY * yDataPos;
             complex long double origNumVal = x + y * I;
 //            NSLog(@"origNumVal -> real=%f, imag=%f", creal(origNumVal), cimag(origNumVal));
             complex long double currNumVal = x + y * I;
@@ -59,11 +57,11 @@
             }
 //            NSLog(@"iteration %i", iteration);
             struct pixel pxl;
-            pxl.aChannel = 255;
+            pxl.aChannel = 0;
             pxl.rChannel = 0;
             pxl.gChannel = 0;
             pxl.bChannel = 0;
-//            UInt8 colorDelta;
+            UInt8 colorDelta;
             switch(iteration) {
                 case 100:
                     break;
@@ -78,16 +76,16 @@
                     pxl.bChannel = 255;
                     break;
                 case 2 ... 6:
-//                    colorDelta = 255 - (42 * (7 - iteration));
+                    colorDelta = 255 - (42 * (7 - iteration));
                     pxl.rChannel = 255;
-//                    pxl.gChannel = colorDelta;
-//                    pxl.bChannel = colorDelta;
+                    pxl.gChannel = colorDelta;
+                    pxl.bChannel = colorDelta;
                     break;
                 case 7 ... 8:
-//                    colorDelta = 255 - (85 * (9 - iteration));
-//                    pxl.rChannel = colorDelta;
-//                    pxl.gChannel = 255;
-//                    pxl.bChannel = 255;
+                    colorDelta = 255 - (85 * (9 - iteration));
+                    pxl.rChannel = colorDelta;
+                    pxl.gChannel = 255;
+                    pxl.bChannel = 255;
                     break;
             }
 //            if (iteration > 0) {
@@ -98,9 +96,9 @@
         }
     }
     struct pixel px1 = data[0][0];
-    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
+    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel);
     struct pixel px2 = data[999][999];
-    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
+    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel);
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
@@ -115,8 +113,8 @@
     size_t bytesPerRow = 4 * width;
     CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
     CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
-//    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
-    CGColorRenderingIntent renderingIntent = kCGImageAlphaLast;
+    CGColorRenderingIntent renderingIntent = kCGImageAlphaPremultipliedFirst;
+//    CGColorRenderingIntent renderingIntent = kCGImageAlphaLast;
     CGImageRef iref = CGImageCreate(width,
                                     height,
                                     bitsPerComponent,
