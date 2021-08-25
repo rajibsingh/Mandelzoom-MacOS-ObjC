@@ -63,8 +63,6 @@
             pxl.bChannel = 0;
             UInt8 colorDelta;
             switch(iteration) {
-                case 100:
-                    break;
                 case 0:
                     pxl.rChannel = 0;
                     pxl.gChannel = 0;
@@ -82,6 +80,12 @@
                     pxl.bChannel = colorDelta;
                     break;
                 case 7 ... 8:
+                    colorDelta = 255 - (85 * (9 - iteration));
+                    pxl.rChannel = colorDelta;
+                    pxl.gChannel = 255;
+                    pxl.bChannel = 255;
+                    break;
+                case 9 ... 1000:
                     colorDelta = 255 - (85 * (9 - iteration));
                     pxl.rChannel = colorDelta;
                     pxl.gChannel = 255;
