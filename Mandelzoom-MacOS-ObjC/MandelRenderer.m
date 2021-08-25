@@ -33,8 +33,8 @@
 -(void) setup {
     complex long double bl = -2L - 2Li;
     complex long double tr = 2L + 2Li;
-    NSLog(@"bl -> real=%le, imag=%le", creal(bl), cimag(bl));
-    NSLog(@"tr -> real=%le, imag=%le", creal(tr), cimag(tr));
+    NSLog(@"bl -> %le, %le i", creal(bl), cimag(bl));
+    NSLog(@"tr -> %le, %le i", creal(tr), cimag(tr));
     stepX = fabsl(creal(tr) - creal(bl)) / 1000L;
     stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
     NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
@@ -46,21 +46,18 @@
             long double x = creal(bl) + stepX * xDataPos;
             long double y = cimag(bl) + stepY * yDataPos;
             complex long double origNumVal = x + y * I;
-//            NSLog(@"origNumVal -> real=%f, imag=%f", creal(origNumVal), cimag(origNumVal));
             complex long double currNumVal = x + y * I;
             int iteration = 0;
             while (creal(currNumVal) * creal(currNumVal) + cimag(currNumVal) + cimag(currNumVal) <= THRESHOLD
                    && iteration < MAXITERATIONS) {
                 iteration++;
                 currNumVal = currNumVal * currNumVal + origNumVal;
-//                NSLog(@"currNumVal -> real=%f, imag=%f", creal(currNumVal), cimag(currNumVal));
             }
-//            NSLog(@"iteration %i", iteration);
             struct pixel pxl;
-            pxl.aChannel = 0;
-            pxl.rChannel = 0;
-            pxl.gChannel = 0;
-            pxl.bChannel = 0;
+//            pxl.aChannel = 0;
+//            pxl.rChannel = 0;
+//            pxl.gChannel = 0;
+//            pxl.bChannel = 0;
             UInt8 colorDelta;
             switch(iteration) {
                 case 0:
@@ -92,10 +89,6 @@
                     pxl.bChannel = 255;
                     break;
             }
-//            if (iteration > 0) {
-//                NSLog(@"caught a non zero iteration: %i\n", iteration);
-//                NSLog(@"%ir %ig %ib %ia\n", pxl.rChannel, pxl.gChannel, pxl.bChannel, pxl.aChannel);
-//            }
             data[xDataPos][yDataPos] = pxl;
         }
     }
@@ -134,24 +127,4 @@
     return image;
 }
 
--(NSImage*) render2 {
-    [self setup];
-    int width = 1000;
-    int height = 1000;
-    size_t bufferLength = width * height * 4;
-    CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
-    size_t bitsPerComponent = 8;
-    size_t bitsPerPixel = 32;
-    size_t bytesPerRow = 4 * width;
-    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
-    
-    CGContextRef contextRef = CGBitmapContextCreate(NULL, 1000, 1000, bitsPerComponent, bytesPerRow, colorSpaceRef, bitmapInfo);
-    CGImageRef myImage;
-    myImage = CGBitmapContextCreateImage(contextRef);
-    CGImageSourceRef imageSrcRef = myImage;
-    CGImageSourceUpdateDataProvider(imageSrcRef, provider, true);
-    NSImage *image = [[NSImage alloc] initWithCGImage:myImage size:NSMakeSize(2, 2)];
-    return image;
-}
 @end
