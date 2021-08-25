@@ -54,10 +54,6 @@
                 currNumVal = currNumVal * currNumVal + origNumVal;
             }
             struct pixel pxl;
-//            pxl.aChannel = 0;
-//            pxl.rChannel = 0;
-//            pxl.gChannel = 0;
-//            pxl.bChannel = 0;
             UInt8 colorDelta;
             switch(iteration) {
                 case 0:
@@ -89,7 +85,7 @@
                     pxl.bChannel = 255;
                     break;
             }
-            data[xDataPos][yDataPos] = pxl;
+            data[yDataPos][xDataPos] = pxl;
         }
     }
     struct pixel px1 = data[0][0];
