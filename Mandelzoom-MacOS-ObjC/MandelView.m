@@ -19,9 +19,10 @@
 //}
 
 -(void) setImage {
-    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
-    _imageView.image = imageObj;
-    _imageView.image = [renderer render];
+//    NSImage* imageObj = [NSImage imageNamed:@"klarion"];
+//    _imageView.image = imageObj;
+//    _imageView.image = [renderer render];
+    [self refresh];
     
 }
 

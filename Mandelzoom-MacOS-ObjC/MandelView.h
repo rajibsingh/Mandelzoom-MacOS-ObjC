@@ -15,7 +15,7 @@
 
 
 -(void) setImage;
-    -(void) refresh;
+-(void) refresh;
 @end
 
 #endif /* MandelView_h */
