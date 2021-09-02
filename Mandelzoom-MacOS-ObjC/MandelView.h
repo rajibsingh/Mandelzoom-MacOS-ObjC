@@ -17,7 +17,7 @@
 -(void) setImage;
 -(void) refresh;
 -(BOOL) acceptsFirstResponder;
--(void) mouseDown:(NSEvent *)event;
+//-(void) mouseDown:(NSEvent *)event;
 @end
 
 #endif /* MandelView_h */

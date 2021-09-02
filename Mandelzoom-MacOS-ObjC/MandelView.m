@@ -33,10 +33,10 @@
     
 }
 
-- (BOOL)acceptsFirstResponder
-{
-    return YES;
-}
+//- (BOOL)acceptsFirstResponder
+//{
+//    return YES;
+//}
 
 -(void)mouseDown:(NSEvent *)event
 {
