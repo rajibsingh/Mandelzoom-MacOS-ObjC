@@ -47,10 +47,18 @@
                   fromView:nil];
     double x = clickLocation.x;
     double y = clickLocation.y;
+    NSLog(@"*** mouseDown event");
     NSLog(@"x:%le y:%le", x, y);
-    NSLog(@"hey we captured a mouseDown event");
- 
+}
 
+-(void)mouseUp: (NSEvent *)event
+{
+    // convert the mouse-down location into the view coords
+    NSPoint clickLocation = [self convertPoint:[event locationInWindow]
+                     fromView:nil];
+    double x = clickLocation.x;
+    double y = clickLocation.y;
+    NSLog(@"*** mouseUp x:%le y:%le", x, y);
 }
 
 @end
