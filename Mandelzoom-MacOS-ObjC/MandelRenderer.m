@@ -4,15 +4,12 @@
 //
 //  Created by Rajib Singh on 7/4/21.
 //
-
 #import <Foundation/Foundation.h>
 #import "MandelRenderer.h"
 
 #include <complex.h>
 
-//use of complex type from
-//https://stackoverflow.com/questions/12980052/are-complex-numbers-already-defined-in-objective-c
-
+//use of complex type from https://stackoverflow.com/questions/12980052/are-complex-numbers-already-defined-in-objective-c
 @implementation MandelRenderer
 {
     complex long double bl, tr;
@@ -85,14 +82,19 @@
                     pxl.gChannel = 255;
                     pxl.bChannel = 255;
                     break;
+                default:
+                    pxl.rChannel = 0;
+                    pxl.gChannel = 0;
+                    pxl.bChannel = 0;
+                    pxl.aChannel = 0;
             }
             data[yDataPos][xDataPos] = pxl;
         }
     }
     struct pixel px1 = data[0][0];
-    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel);
+    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
     struct pixel px2 = data[999][999];
-    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel);
+    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
