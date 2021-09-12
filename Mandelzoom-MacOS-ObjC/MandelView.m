@@ -12,6 +12,7 @@
 @implementation MandelView
 {
     MandelRenderer *renderer;
+    long double mouseDownLocX, mouseDownLocY, mouseUpLocX, mouseUpLocY;
 }
 
 //-(void) setUp {
@@ -47,6 +48,8 @@
                   fromView:nil];
     double x = clickLocation.x;
     double y = clickLocation.y;
+    mouseDownLocX = x;
+    mouseDownLocY = y;
     NSLog(@"*** mouseDown event");
     NSLog(@"x:%le y:%le", x, y);
 }
@@ -58,6 +61,10 @@
                      fromView:nil];
     double x = clickLocation.x;
     double y = clickLocation.y;
+    mouseUpLocX = x;
+    mouseUpLocY = y;
+    mouseDownLocX = 0;
+    mouseDownLocY = 0;
     NSLog(@"*** mouseUp x:%le y:%le", x, y);
 }
 

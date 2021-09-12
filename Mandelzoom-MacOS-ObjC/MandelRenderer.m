@@ -19,6 +19,7 @@
     long double stepX, stepY;
     int THRESHOLD, MAXITERATIONS;
     UInt8 r,g,b,a;
+    long double mouseDown, mouseUp;
     
     struct pixel {
         UInt8 aChannel;
