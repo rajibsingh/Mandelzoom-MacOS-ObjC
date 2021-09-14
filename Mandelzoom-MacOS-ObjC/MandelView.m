@@ -8,8 +8,7 @@
 @implementation MandelView
 {
     MandelRenderer *renderer;
-    long double mouseDownLocX, mouseDownLocY, mouseUpLocX, mouseUpLocY;
-    NSPoint *mouseDownLoc, *mouseUpLoc;
+    NSPoint mouseDownLoc, mouseUpLoc;
 }
 
 //-(void) setUp {
@@ -36,28 +35,19 @@
 
 -(void)mouseDown:(NSEvent *)event
 {
-    NSPoint clickLocation;
- 
     // convert the mouse-down location into the view coords
-    clickLocation = [self convertPoint:[event locationInWindow]
+    NSPoint clickLocation = [self convertPoint:[event locationInWindow]
                   fromView:nil];
-    double x = clickLocation.x;
-    double y = clickLocation.y;
-    mouseDownLocX = x;
-    mouseDownLocY = y;
-    NSLog(@"*** mouseDown event");
-    NSLog(@"x:%lf y:%lf", x, y);
+    mouseDownLoc = clickLocation;
+    NSLog(@"mouseDown x:%lf y:%lf", mouseDownLoc.x, mouseDownLoc.y);
 }
 
 -(void)mouseUp: (NSEvent *)event
 {
     // convert the mouse-down location into the view coords
     NSPoint clickLocation = [self convertPoint:[event locationInWindow] fromView:nil];
-    mouseUpLocX = clickLocation.x;
-    mouseUpLocY = clickLocation.y;
-    NSLog(@"*** draw a box from %Lf, %Lf to %Lf, %Lf", mouseDownLocX, mouseDownLocY, mouseUpLocX, mouseUpLocY);
-    mouseDownLocX = 0;
-    mouseDownLocY = 0;
+    mouseUpLoc = clickLocation;
+    NSLog(@"*** draw a box from %f, %f to %f, %f", mouseDownLoc.x, mouseDownLoc.y, mouseUpLoc.x, mouseUpLoc.y);
 }
 
 @end
