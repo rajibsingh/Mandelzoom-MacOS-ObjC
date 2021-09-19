@@ -48,6 +48,8 @@
     NSPoint clickLocation = [self convertPoint:[event locationInWindow] fromView:nil];
     mouseUpLoc = clickLocation;
     NSLog(@"*** draw a box from %f, %f to %f, %f", mouseDownLoc.x, mouseDownLoc.y, mouseUpLoc.x, mouseUpLoc.y);
+    MandelRenderer *renderer = [[MandelRenderer alloc] init];
+    _imageView.image = [renderer renderWithBox];
 }
 
 @end

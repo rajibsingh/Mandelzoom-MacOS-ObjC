@@ -12,7 +12,7 @@
 @interface MandelRenderer:NSObject
 
 -(NSImage*) render;
-    
+-(NSImage*) renderWithBox;
 @end
 
 #endif /* MandelRenderer_h */

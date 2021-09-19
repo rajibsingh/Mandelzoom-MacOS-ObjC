@@ -31,8 +31,8 @@
 -(void) setup {
     complex long double bl = -2L - 2Li;
     complex long double tr = 2L + 2Li;
-    NSLog(@"bl -> %le, %le i", creal(bl), cimag(bl));
-    NSLog(@"tr -> %le, %le i", creal(tr), cimag(tr));
+//    NSLog(@"bl -> %le, %le i", creal(bl), cimag(bl));
+//    NSLog(@"tr -> %le, %le i", creal(tr), cimag(tr));
     stepX = fabsl(creal(tr) - creal(bl)) / 1000L;
     stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
     NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
@@ -112,17 +112,23 @@
     CGColorRenderingIntent renderingIntent = kCGImageAlphaPremultipliedFirst;
 //    CGColorRenderingIntent renderingIntent = kCGImageAlphaLast;
     CGImageRef iref = CGImageCreate(width,
-                                    height,
-                                    bitsPerComponent,
-                                    bitsPerPixel,
-                                    bytesPerRow,
-                                    colorSpaceRef,
-                                    bitmapInfo,
-                                    provider,   // data provider
-                                    NULL,       // decode
-                                    YES,        // should interpolate
-                                    renderingIntent);
+                            height,
+                            bitsPerComponent,
+                            bitsPerPixel,
+                            bytesPerRow,
+                            colorSpaceRef,
+                            bitmapInfo,
+                            provider,   // data provider
+                            NULL,       // decode
+                            YES,        // should interpolate
+                            renderingIntent);
     NSImage *image = [[NSImage alloc] initWithCGImage:iref size:NSMakeSize(width, height)];
+    return image;
+}
+
+-(NSImage*) renderWithBox {
+    NSLog(@"*** in the renderWithBox method");
+    NSImage *image = [self render];
     return image;
 }
 
