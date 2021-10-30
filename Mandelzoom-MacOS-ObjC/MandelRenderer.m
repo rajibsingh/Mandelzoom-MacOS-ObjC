@@ -8,6 +8,7 @@
 #import "MandelRenderer.h"
 
 #include <complex.h>
+#include <time.h>
 
 //use of complex type from https://stackoverflow.com/questions/12980052/are-complex-numbers-already-defined-in-objective-c
 @implementation MandelRenderer
@@ -29,13 +30,15 @@
 }
 
 -(void) setup {
+    clock_t start, end;
+    start = clock();
     complex long double bl = -2L - 2Li;
     complex long double tr = 2L + 2Li;
 //    NSLog(@"bl -> %le, %le i", creal(bl), cimag(bl));
 //    NSLog(@"tr -> %le, %le i", creal(tr), cimag(tr));
     stepX = fabsl(creal(tr) - creal(bl)) / 1000L;
     stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
-    NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
+//    NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
     THRESHOLD=10;
     MAXITERATIONS=1000;
     int xDataPos, yDataPos;
@@ -91,10 +94,12 @@
             data[yDataPos][xDataPos] = pxl;
         }
     }
-    struct pixel px1 = data[0][0];
-    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
-    struct pixel px2 = data[999][999];
-    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
+//    struct pixel px1 = data[0][0];
+//    printf("px1 -> %ir %ig %ib %ia\n", px1.rChannel, px1.gChannel, px1.bChannel, px1.aChannel);
+//    struct pixel px2 = data[999][999];
+//    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
+    end = clock();
+    printf("that took %le seconds\n", ((double) end - start));
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
@@ -127,7 +132,7 @@
 }
 
 -(NSImage*) renderWithBox {
-    NSLog(@"*** in the renderWithBox method");
+//    NSLog(@"*** in the renderWithBox method");
     NSImage *image = [self render];
     return image;
 }
