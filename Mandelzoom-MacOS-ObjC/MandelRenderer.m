@@ -99,7 +99,7 @@
 //    struct pixel px2 = data[999][999];
 //    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
     end = clock();
-    printf("that took %le seconds\n", ((double) end - start));
+    printf("that took %lu seconds\n", (end - start));
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
