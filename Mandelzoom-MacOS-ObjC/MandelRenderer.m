@@ -40,7 +40,7 @@
     stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
 //    NSLog(@"stepX: %Le, stepY: %Le", stepX, stepY);
     THRESHOLD=10;
-    MAXITERATIONS=1000;
+    MAXITERATIONS=250;
     int xDataPos, yDataPos;
     for (xDataPos = 0; xDataPos < 1000; xDataPos++) {
         for (yDataPos = 0; yDataPos < 1000; yDataPos++) {
@@ -99,7 +99,7 @@
 //    struct pixel px2 = data[999][999];
 //    printf("px2 -> %ir %ig %ib %ia\n", px2.rChannel, px2.gChannel, px2.bChannel, px2.aChannel);
     end = clock();
-    printf("that took %lu seconds\n", (end - start));
+    printf("that took %f seconds\n", (float)(end - start)/100000);
 }
 
 // got this code from https://stackoverflow.com/a/11719369/1922101
