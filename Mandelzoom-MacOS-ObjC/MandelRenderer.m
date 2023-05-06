@@ -79,17 +79,17 @@
                     pxl.gChannel = 255;
                     pxl.bChannel = 255;
                     break;
-                case 9 ... 1000:
+                case 9 ... 250:
                     colorDelta = 255 - (85 * (9 - iteration));
                     pxl.rChannel = colorDelta;
                     pxl.gChannel = 255;
                     pxl.bChannel = 255;
                     break;
                 default:
-                    pxl.rChannel = 0;
-                    pxl.gChannel = 0;
-                    pxl.bChannel = 0;
-                    pxl.aChannel = 0;
+                    pxl.rChannel = 1;
+                    pxl.gChannel = 1;
+                    pxl.bChannel = 1;
+                    pxl.aChannel = 1;
             }
             data[yDataPos][xDataPos] = pxl;
         }
