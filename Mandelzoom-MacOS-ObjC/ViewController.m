@@ -11,8 +11,8 @@
 
 @implementation ViewController
 - (IBAction)buttonAction:(id)sender {
-    printf("button clicked");
-    printf("%@", sender);
+    printf("button clicked\n");
+    printf("Sender description: %s\n", [[sender description] UTF8String]);
     _statusLabel.stringValue = @"clicked";
     [_mandelView refresh];
 }
