@@ -4,20 +4,52 @@
 //
 //  Created by Rajib Singh on 7/4/21.
 //
+
 #import <Foundation/Foundation.h>
 #import "MandelRenderer.h"
 
 #include <complex.h>
 #include <time.h>
+#include <math.h>
 
 //use of complex type from https://stackoverflow.com/questions/12980052/are-complex-numbers-already-defined-in-objective-c
+
+// h (hue): 0-360, s (saturation): 0-1, b (brightness): 0-1
+static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, UInt8 *g_out, UInt8 *b_out) {
+    if (s == 0) { // Achromatic (grey)
+        *r_out = *g_out = *b_out = (UInt8)(v * 255.0L);
+        return;
+    }
+
+    long double hue_sector = floorl(h / 60.0L);
+    long double hue_fractional = (h / 60.0L) - hue_sector;
+
+    long double p = v * (1.0L - s);
+    long double q = v * (1.0L - s * hue_fractional);
+    long double t = v * (1.0L - s * (1.0L - hue_fractional));
+
+    long double r_temp=0, g_temp=0, b_temp=0;
+
+    switch ((int)hue_sector) {
+        case 0: r_temp = v; g_temp = t; b_temp = p; break;
+        case 1: r_temp = q; g_temp = v; b_temp = p; break;
+        case 2: r_temp = p; g_temp = v; b_temp = t; break;
+        case 3: r_temp = p; g_temp = q; b_temp = v; break;
+        case 4: r_temp = t; g_temp = p; b_temp = v; break;
+        default:r_temp = v; g_temp = p; b_temp = q; break; // case 5
+    }
+    *r_out = (UInt8)(r_temp * 255.0L);
+    *g_out = (UInt8)(g_temp * 255.0L);
+    *b_out = (UInt8)(b_temp * 255.0L);
+}
+
 @implementation MandelRenderer
 {
-    complex long double bl_ivar, tr_ivar; 
-    long double stepX_ivar, stepY_ivar; 
-    int THRESHOLD_ivar, MAXITERATIONS_ivar; 
-    UInt8 r,g,b,a; 
-    long double mouseDown, mouseUp; 
+    complex long double bl_ivar, tr_ivar;
+    long double stepX_ivar, stepY_ivar;
+    int THRESHOLD_ivar, MAXITERATIONS_ivar; // THRESHOLD_ivar is not used by setup if shadowed
+    UInt8 r,g,b,a; // These seem unused as ivars
+    long double mouseDown, mouseUp; // These seem unused as ivars
     
     struct pixel {
         UInt8 aChannel;
@@ -32,12 +64,15 @@
 -(void) setup {
     clock_t start, end;
     start = clock();
-    complex long double bl = -2L - 2Li;
-    complex long double tr = 2L + 2Li;
+    
+    complex long double bl = -2.1L - 1.35L * I;
+    complex long double tr = 0.6L + 1.35L * I;
+
     long double stepX = fabsl(creal(tr) - creal(bl)) / 1000L;
     long double stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
-    int THRESHOLD=10; 
-    int MAXITERATIONS=250;
+    
+    const long double ESCAPE_RADIUS_SQUARED = 256.0L;
+    int MAXITERATIONS = 500;
 
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
@@ -45,94 +80,71 @@
         int yDataPos = (int)yDataPos_idx;
 
         for (int xDataPos = 0; xDataPos < 1000; xDataPos++) {
-            long double x = creal(bl) + stepX * xDataPos;
-            long double y = cimag(bl) + stepY * yDataPos; 
+            long double x0 = creal(bl) + stepX * xDataPos;
+            long double y0 = cimag(bl) + stepY * yDataPos;
             
-            complex long double origNumVal = x + y * I;
-            complex long double currNumVal = x + y * I; 
-            
+            complex long double c = x0 + y0 * I;
+            complex long double z = 0.0L + 0.0L * I;
+
             int iteration = 0;
+            long double modulus_squared = 0.0L;
             
-            while (creal(currNumVal) * creal(currNumVal) + cimag(currNumVal) * cimag(currNumVal) <= THRESHOLD
-                   && iteration < MAXITERATIONS) {
+            while (iteration < MAXITERATIONS) {
+                long double z_re = creal(z);
+                long double z_im = cimag(z);
+                modulus_squared = z_re * z_re + z_im * z_im;
+                if (modulus_squared > ESCAPE_RADIUS_SQUARED) {
+                    break;
+                }
+                z = (z_re * z_re - z_im * z_im + creal(c)) + (2.0L * z_re * z_im + cimag(c)) * I;
                 iteration++;
-                currNumVal = currNumVal * currNumVal + origNumVal;
             }
             
             struct pixel pxl;
-            UInt8 colorDelta;
 
-            // Color logic based on the original switch, attempting to preserve its behavior.
-            // Points that reach MAXITERATIONS are colored by the `9 ... 250` rule in original code.
             if (iteration == MAXITERATIONS) {
-                // This is a point considered "in the set" (bounded).
-                // Original code's `case 9 ... 250:` covers `iteration = 250`.
-                {
-                    int val = 9 - iteration; 
-                    colorDelta = (UInt8)(255 - (85 * val));
-                    pxl.rChannel = colorDelta;
-                    pxl.gChannel = 255;
-                    pxl.bChannel = 255;
+                pxl.rChannel = 0;
+                pxl.gChannel = 0;
+                pxl.bChannel = 0;
+            } else {
+                long double smooth_iteration = iteration + 1.0L - log2l(0.5L * log2l(modulus_squared));
+
+                // Keep color_density relatively low for wider bands
+                long double color_density = 0.055L;
+                long double hue_0_to_1 = fmodl(smooth_iteration * color_density, 1.0L);
+                
+                if (hue_0_to_1 < 0.0L) {
+                    hue_0_to_1 += 1.0L;
                 }
-            } else { // Point escaped (iteration < MAXITERATIONS)
-                switch(iteration) {
-                    case 0:
-                        pxl.rChannel = 0; pxl.gChannel = 0; pxl.bChannel = 0;
-                        break;
-                    case 1:
-                        pxl.rChannel = 255; pxl.gChannel = 255; pxl.bChannel = 255;
-                        break;
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                        {
-                            colorDelta = 255 - (42 * (7 - iteration));
-                            pxl.rChannel = 255; pxl.gChannel = colorDelta; pxl.bChannel = colorDelta;
-                        }
-                        break;
-                    case 7:
-                    case 8:
-                        {
-                            colorDelta = 255 - (85 * (9 - iteration));
-                            pxl.rChannel = colorDelta; pxl.gChannel = 255; pxl.bChannel = 255;
-                        }
-                        break;
-                    default: // Covers 9 up to MAXITERATIONS - 1, and any other unhandled intermediate iteration counts.
-                        {
-                            int val = 9 - iteration;
-                            colorDelta = (UInt8)(255 - (85 * val)); // This will wrap around for UInt8, creating color bands.
-                            pxl.rChannel = colorDelta;
-                            pxl.gChannel = 255;
-                            pxl.bChannel = 255;
-                        }
-                        break;
-                }
+                
+                long double base_hue_degrees = hue_0_to_1 * 360.0L;
+                long double hue_offset_degrees = 253.0L;
+                long double final_hue_degrees = fmodl(base_hue_degrees + hue_offset_degrees, 360.0L);
+                
+                hsbToRgb(final_hue_degrees, 1.0L, 1.0L, &pxl.rChannel, &pxl.gChannel, &pxl.bChannel);
             }
-            // Set alpha channel consistently to opaque for all pixels.
-            pxl.aChannel = 255;
             
+            pxl.aChannel = 255;
             data[yDataPos][xDataPos] = pxl;
         }
-    }); 
+    });
 
     end = clock();
-    printf("that took %f seconds\n", (float)(end - start)/CLOCKS_PER_SEC); 
+    printf("Color calculation took %f seconds\n", (float)(end - start)/CLOCKS_PER_SEC);
 }
 
 -(NSImage*) render {
-    [self setup]; 
+    [self setup];
     int width = 1000;
     int height = 1000;
-    size_t bufferLength = width * height * 4; 
+    size_t bufferLength = width * height * 4;
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
     size_t bitsPerComponent = 8;
     size_t bitsPerPixel = 32;
     size_t bytesPerRow = 4 * width;
     CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast; 
-    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault; 
+    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedLast;
+    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
 
     CGImageRef iref = CGImageCreate(width,
                             height,
@@ -141,16 +153,16 @@
                             bytesPerRow,
                             colorSpaceRef,
                             bitmapInfo,
-                            provider,   
-                            NULL,       
-                            YES,        
+                            provider,   // data provider
+                            NULL,       // decode
+                            YES,        // should interpolate
                             renderingIntent);
     
-    CGDataProviderRelease(provider); 
-    CGColorSpaceRelease(colorSpaceRef); 
+    CGDataProviderRelease(provider);
+    CGColorSpaceRelease(colorSpaceRef);
 
     NSImage *image = [[NSImage alloc] initWithCGImage:iref size:NSMakeSize(width, height)];
-    CGImageRelease(iref); 
+    CGImageRelease(iref);
 
     return image;
 }
