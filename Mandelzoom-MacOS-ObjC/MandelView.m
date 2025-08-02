@@ -29,8 +29,21 @@
     // Ensure image view is set up for centering
     if (self.imageView) {
         self.imageView.imageAlignment = NSImageAlignCenter;
-        self.imageView.imageScaling = NSImageScaleProportionallyDown;
+        self.imageView.imageScaling = NSImageScaleNone; // We'll handle sizing manually
     }
+    
+    // Set up frame change notifications
+    [self setPostsFrameChangedNotifications:YES];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(frameDidChange:)
+                                                 name:NSViewFrameDidChangeNotification
+                                               object:self];
+    
+    // Set up render time label
+    [self setupRenderTimeLabel];
+    
+    // Initial layout
+    [self layoutImageView];
 }
 
 -(void) setImage {
@@ -41,7 +54,10 @@
     NSSize viewSize = _imageView.bounds.size;
     int resolution = [self calculateOptimalResolution:viewSize];
     
-    _imageView.image = [renderer renderWithWidth:resolution height:resolution];
+    double renderTime;
+    _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
+    [self updateRenderTimeDisplay:renderTime];
+    
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
         [self.selectionOverlayView setNeedsDisplay:YES];
@@ -59,7 +75,10 @@
     NSSize viewSize = _imageView.bounds.size;
     int resolution = [self calculateOptimalResolution:viewSize];
     
-    _imageView.image = [renderer renderWithWidth:resolution height:resolution];
+    double renderTime;
+    _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
+    [self updateRenderTimeDisplay:renderTime];
+    
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
         [self.selectionOverlayView setNeedsDisplay:YES];
@@ -176,7 +195,9 @@
     NSSize viewSize = _imageView.bounds.size;
     int resolution = [self calculateOptimalResolution:viewSize];
     
-    _imageView.image = [renderer renderWithWidth:resolution height:resolution];
+    double renderTime;
+    _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
+    [self updateRenderTimeDisplay:renderTime];
 }
 
 - (int)calculateOptimalResolution:(NSSize)viewSize {
@@ -195,6 +216,94 @@
     }
     
     return minDimension;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)frameDidChange:(NSNotification *)notification {
+    [self layoutImageView];
+}
+
+- (void)layoutImageView {
+    if (!self.imageView) return;
+    
+    // Get the container view bounds
+    NSRect containerBounds = self.bounds;
+    
+    // Calculate the square size using the smaller dimension
+    CGFloat minDimension = fmin(containerBounds.size.width, containerBounds.size.height);
+    
+    // Create square frame centered in the container
+    NSRect imageFrame = NSMakeRect(
+        (containerBounds.size.width - minDimension) / 2.0,  // Center horizontally
+        (containerBounds.size.height - minDimension) / 2.0, // Center vertically
+        minDimension,
+        minDimension
+    );
+    
+    // Update image view frame
+    self.imageView.frame = imageFrame;
+    
+    // Update selection overlay to match
+    if (self.selectionOverlayView) {
+        self.selectionOverlayView.frame = imageFrame;
+    }
+    
+    // Position render time label in lower right corner of image view
+    [self positionRenderTimeLabel];
+    
+    // Re-render at new size
+    [self setImage];
+}
+
+- (void)setupRenderTimeLabel {
+    if (!self.renderTimeLabel) {
+        self.renderTimeLabel = [[NSTextField alloc] init];
+        self.renderTimeLabel.editable = NO;
+        self.renderTimeLabel.bezeled = NO;
+        self.renderTimeLabel.drawsBackground = YES;
+        self.renderTimeLabel.backgroundColor = [NSColor colorWithWhite:0.0 alpha:0.7]; // Semi-transparent black background
+        self.renderTimeLabel.textColor = [NSColor whiteColor];
+        self.renderTimeLabel.font = [NSFont systemFontOfSize:11.0]; // Slightly larger
+        self.renderTimeLabel.alignment = NSTextAlignmentCenter;
+        self.renderTimeLabel.stringValue = @"";
+        
+        // Add some padding
+        self.renderTimeLabel.layer.cornerRadius = 3.0;
+        self.renderTimeLabel.wantsLayer = YES;
+        
+        [self addSubview:self.renderTimeLabel];
+    }
+}
+
+- (void)positionRenderTimeLabel {
+    if (!self.renderTimeLabel || !self.imageView) return;
+    
+    NSRect imageFrame = self.imageView.frame;
+    NSSize labelSize = [self.renderTimeLabel.stringValue sizeWithAttributes:@{
+        NSFontAttributeName: self.renderTimeLabel.font
+    }];
+    
+    // Position in lower right corner of image view with 8pt margin and padding
+    NSRect labelFrame = NSMakeRect(
+        imageFrame.origin.x + imageFrame.size.width - labelSize.width - 16,
+        imageFrame.origin.y + 8,
+        labelSize.width + 8,
+        labelSize.height + 4
+    );
+    
+    self.renderTimeLabel.frame = labelFrame;
+}
+
+- (void)updateRenderTimeDisplay:(double)renderTime {
+    if (!self.renderTimeLabel) {
+        [self setupRenderTimeLabel];
+    }
+    
+    self.renderTimeLabel.stringValue = [NSString stringWithFormat:@"%.3fs", renderTime];
+    [self positionRenderTimeLabel];
 }
 
 @end

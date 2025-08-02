@@ -47,7 +47,7 @@
     return self;
 }
 
--(void) setupWithWidth:(int)width height:(int)height {
+-(double) setupWithWidth:(int)width height:(int)height {
     if (data && (width != currentWidth || height != currentHeight)) {
         free(data);
         data = NULL;
@@ -59,7 +59,7 @@
         data = malloc(width * height * sizeof(struct pixel));
         if (!data) {
             NSLog(@"Error: Failed to allocate memory for pixel data");
-            return;
+            return 0.0;
         }
     }
     
@@ -130,7 +130,9 @@
     });
 
     end = clock();
-    printf("Color calculation took %f seconds\n", (float)(end - start)/CLOCKS_PER_SEC);
+    double renderTime = (double)(end - start)/CLOCKS_PER_SEC;
+    printf("Color calculation took %f seconds\n", renderTime);
+    return renderTime;
 }
 
 -(NSImage*) render {
@@ -138,7 +140,15 @@
 }
 
 -(NSImage*) renderWithWidth:(int)width height:(int)height {
-    [self setupWithWidth:width height:height];
+    double renderTime;
+    return [self renderWithWidth:width height:height renderTime:&renderTime];
+}
+
+-(NSImage*) renderWithWidth:(int)width height:(int)height renderTime:(double*)renderTime {
+    double time = [self setupWithWidth:width height:height];
+    if (renderTime) {
+        *renderTime = time;
+    }
     size_t bufferLength = width * height * 4;
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
     size_t bitsPerComponent = 8;

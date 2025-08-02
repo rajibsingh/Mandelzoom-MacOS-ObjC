@@ -17,6 +17,7 @@
 
 -(NSImage*) render;
 -(NSImage*) renderWithWidth:(int)width height:(int)height;
+-(NSImage*) renderWithWidth:(int)width height:(int)height renderTime:(double*)renderTime;
 @end
 
 #endif /* MandelRenderer_h */

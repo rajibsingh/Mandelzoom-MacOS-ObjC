@@ -15,6 +15,7 @@
 @interface MandelView : NSView
     @property (strong) IBOutlet NSImageView *imageView;
     @property (strong) IBOutlet SelectionRectangleView *selectionOverlayView;
+    @property (strong) NSTextField *renderTimeLabel;
 
 -(void) setImage;
 -(void) refresh;
