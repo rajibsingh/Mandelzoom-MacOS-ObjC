@@ -10,15 +10,14 @@
 #ifndef MandelView_h
 #define MandelView_h
 
-@interface MandelView : NSView
-    @property (weak) IBOutlet NSImageView *imageView;
+@class SelectionRectangleView;
 
+@interface MandelView : NSView
+    @property (strong) IBOutlet NSImageView *imageView;
+    @property (strong) IBOutlet SelectionRectangleView *selectionOverlayView;
 
 -(void) setImage;
 -(void) refresh;
--(BOOL) acceptsFirstResponder;
--(void) mouseDown:(NSEvent *)event;
--(void) mouseUp:(NSEvent *)event;
 @end
 
 #endif /* MandelView_h */

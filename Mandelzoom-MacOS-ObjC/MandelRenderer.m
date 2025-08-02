@@ -45,12 +45,6 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
 
 @implementation MandelRenderer
 {
-    complex long double bl_ivar, tr_ivar;
-    long double stepX_ivar, stepY_ivar;
-    int THRESHOLD_ivar, MAXITERATIONS_ivar; // THRESHOLD_ivar is not used by setup if shadowed
-    UInt8 r,g,b,a; // These seem unused as ivars
-    long double mouseDown, mouseUp; // These seem unused as ivars
-    
     struct pixel {
         UInt8 aChannel;
         UInt8 rChannel;
@@ -59,17 +53,32 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
     };
     
     struct pixel data[1000][1000];
+    complex long double _bottomLeft;
+    complex long double _topRight;
+}
+
+@synthesize bottomLeft = _bottomLeft;
+@synthesize topRight = _topRight;
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        // Default coordinates for the initial full view
+        _bottomLeft = -2.1L - 1.35L * I;
+        _topRight = 0.6L + 1.35L * I;
+    }
+    return self;
 }
 
 -(void) setup {
     clock_t start, end;
     start = clock();
     
-    complex long double bl = -2.1L - 1.35L * I;
-    complex long double tr = 0.6L + 1.35L * I;
+    complex long double bl_coord = self.bottomLeft;
+    complex long double tr_coord = self.topRight;
 
-    long double stepX = fabsl(creal(tr) - creal(bl)) / 1000L;
-    long double stepY = fabsl(cimag(tr) - cimag(bl)) / 1000L;
+    long double stepX = fabsl(creal(tr_coord) - creal(bl_coord)) / 1000L;
+    long double stepY = fabsl(cimag(tr_coord) - cimag(bl_coord)) / 1000L;
     
     const long double ESCAPE_RADIUS_SQUARED = 256.0L;
     int MAXITERATIONS = 500;
@@ -80,8 +89,8 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
         int yDataPos = (int)yDataPos_idx;
 
         for (int xDataPos = 0; xDataPos < 1000; xDataPos++) {
-            long double x0 = creal(bl) + stepX * xDataPos;
-            long double y0 = cimag(bl) + stepY * yDataPos;
+            long double x0 = creal(bl_coord) + stepX * xDataPos;
+            long double y0 = cimag(bl_coord) + stepY * yDataPos;
             
             complex long double c = x0 + y0 * I;
             complex long double z = 0.0L + 0.0L * I;
@@ -109,7 +118,6 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
             } else {
                 long double smooth_iteration = iteration + 1.0L - log2l(0.5L * log2l(modulus_squared));
 
-                // Keep color_density relatively low for wider bands
                 long double color_density = 0.055L;
                 long double hue_0_to_1 = fmodl(smooth_iteration * color_density, 1.0L);
                 
@@ -118,7 +126,7 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
                 }
                 
                 long double base_hue_degrees = hue_0_to_1 * 360.0L;
-                long double hue_offset_degrees = 253.0L;
+                long double hue_offset_degrees = 43.0L;
                 long double final_hue_degrees = fmodl(base_hue_degrees + hue_offset_degrees, 360.0L);
                 
                 hsbToRgb(final_hue_degrees, 1.0L, 1.0L, &pxl.rChannel, &pxl.gChannel, &pxl.bChannel);
@@ -153,9 +161,9 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
                             bytesPerRow,
                             colorSpaceRef,
                             bitmapInfo,
-                            provider,   // data provider
-                            NULL,       // decode
-                            YES,        // should interpolate
+                            provider,
+                            NULL,
+                            YES,
                             renderingIntent);
     
     CGDataProviderRelease(provider);
@@ -164,11 +172,6 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
     NSImage *image = [[NSImage alloc] initWithCGImage:iref size:NSMakeSize(width, height)];
     CGImageRelease(iref);
 
-    return image;
-}
-
--(NSImage*) renderWithBox {
-    NSImage *image = [self render];
     return image;
 }
 

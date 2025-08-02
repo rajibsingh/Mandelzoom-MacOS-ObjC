@@ -4,15 +4,18 @@
 //
 //  Created by Rajib Singh on 7/4/21.
 //
-#import <Cocoa/Cocoa.h>
 
 #ifndef MandelRenderer_h
 #define MandelRenderer_h
 
-@interface MandelRenderer:NSObject
+#import <AppKit/AppKit.h>
+#include <complex.h>
+
+@interface MandelRenderer : NSObject
+@property (nonatomic, assign) complex long double bottomLeft;
+@property (nonatomic, assign) complex long double topRight;
 
 -(NSImage*) render;
--(NSImage*) renderWithBox;
 @end
 
 #endif /* MandelRenderer_h */
