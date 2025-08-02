@@ -14,6 +14,7 @@
 		350E5F122690EFB500967E1D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F112690EFB500967E1D /* main.m */; };
 		350E5F1B2691E91700967E1D /* MandelView.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F1A2691E91700967E1D /* MandelView.m */; };
 		3535619E269258B200180B5D /* MandelRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3535619D269258B200180B5D /* MandelRenderer.m */; };
+		37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 406E716DDD4740F3BD03 /* SelectionRectangleView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,8 @@
 		350E5F1F269213ED00967E1D /* MandelView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelView.h; sourceTree = "<group>"; };
 		3535619C2692589A00180B5D /* MandelRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelRenderer.h; sourceTree = "<group>"; };
 		3535619D269258B200180B5D /* MandelRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MandelRenderer.m; sourceTree = "<group>"; };
+		C257D9999E5D48A58957 /* SelectionRectangleView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SelectionRectangleView.h; sourceTree = "<group>"; };
+		406E716DDD4740F3BD03 /* SelectionRectangleView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SelectionRectangleView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +79,8 @@
 				350E5F1A2691E91700967E1D /* MandelView.m */,
 				3535619C2692589A00180B5D /* MandelRenderer.h */,
 				3535619D269258B200180B5D /* MandelRenderer.m */,
+				C257D9999E5D48A58957 /* SelectionRectangleView.h */,
+				406E716DDD4740F3BD03 /* SelectionRectangleView.m */,
 			);
 			path = "Mandelzoom-MacOS-ObjC";
 			sourceTree = "<group>";
@@ -153,6 +158,7 @@
 				350E5F072690EFB200967E1D /* AppDelegate.m in Sources */,
 				3535619E269258B200180B5D /* MandelRenderer.m in Sources */,
 				350E5F1B2691E91700967E1D /* MandelView.m in Sources */,
+				37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

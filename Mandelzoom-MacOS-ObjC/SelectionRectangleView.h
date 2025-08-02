@@ -7,6 +7,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) NSRect selectionRectToDraw;
 @property (nonatomic, assign) BOOL shouldDrawRectangle;
+@property (nonatomic, strong) NSTimer *animationTimer;
+@property (nonatomic, assign) CGFloat dashPhase;
 
 @end
 

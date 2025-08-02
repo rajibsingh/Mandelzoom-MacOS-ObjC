@@ -8,6 +8,7 @@
     if (self) {
         _shouldDrawRectangle = NO;
         _selectionRectToDraw = NSZeroRect;
+        _dashPhase = 0.0;
     }
     return self;
 }
@@ -21,26 +22,70 @@
     [super drawRect:dirtyRect];
 
     if (self.shouldDrawRectangle && !NSEqualRects(self.selectionRectToDraw, NSZeroRect)) {
-        // Set color for the rectangle
-        [[NSColor colorWithCalibratedWhite:1.0 alpha:0.8] setStroke]; // White, slightly transparent
+        // Set color for the rectangle - use white for visibility
+        [[NSColor whiteColor] setStroke];
 
         NSBezierPath *path = [NSBezierPath bezierPathWithRect:self.selectionRectToDraw];
         
-        // Set up dashed line
-        CGFloat dashes[] = {5.0, 3.0}; // 5 points on, 3 points off
-        [path setLineDash:dashes count:2 phase:0.0];
-        [path setLineWidth:1.0]; // Thin line
+        // Set up marching ants dashed line
+        CGFloat dashes[] = {6.0, 4.0}; // 6 points on, 4 points off
+        [path setLineDash:dashes count:2 phase:self.dashPhase];
+        [path setLineWidth:1.5]; // Slightly thicker for visibility
         
         [path stroke];
+        
+        // Add a black outline for better contrast
+        [[NSColor blackColor] setStroke];
+        NSBezierPath *outlinePath = [NSBezierPath bezierPathWithRect:self.selectionRectToDraw];
+        CGFloat outlineDashes[] = {6.0, 4.0};
+        [outlinePath setLineDash:outlineDashes count:2 phase:self.dashPhase + 5.0]; // Offset phase
+        [outlinePath setLineWidth:1.5];
+        [outlinePath stroke];
     }
 }
 
+- (void)setShouldDrawRectangle:(BOOL)shouldDrawRectangle {
+    _shouldDrawRectangle = shouldDrawRectangle;
+    
+    if (shouldDrawRectangle) {
+        [self startMarchingAnts];
+    } else {
+        [self stopMarchingAnts];
+    }
+}
+
+- (void)startMarchingAnts {
+    if (!self.animationTimer) {
+        self.animationTimer = [NSTimer scheduledTimerWithTimeInterval:0.1
+                                                               target:self
+                                                             selector:@selector(animateDashes)
+                                                             userInfo:nil
+                                                              repeats:YES];
+    }
+}
+
+- (void)stopMarchingAnts {
+    if (self.animationTimer) {
+        [self.animationTimer invalidate];
+        self.animationTimer = nil;
+        self.dashPhase = 0.0;
+    }
+}
+
+- (void)animateDashes {
+    self.dashPhase += 1.0;
+    if (self.dashPhase >= 10.0) {
+        self.dashPhase = 0.0;
+    }
+    [self setNeedsDisplay:YES];
+}
+
+- (void)dealloc {
+    [self stopMarchingAnts];
+}
+
 // Override hitTest to allow clicks to pass through to the MandelView/ImageView below
-// if we are not actively drawing a rectangle (or always, if desired)
 - (NSView *)hitTest:(NSPoint)point {
-    // If this view should not handle mouse events directly for selection,
-    // let them pass through to the view below.
-    // MandelView is handling the events, so this overlay should be "transparent" to mouse events.
     return nil; 
 }
 

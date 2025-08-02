@@ -42,6 +42,11 @@
     // Set up render time label
     [self setupRenderTimeLabel];
     
+    // Set up selection overlay view if not connected from storyboard
+    if (!self.selectionOverlayView) {
+        [self setupSelectionOverlayView];
+    }
+    
     // Initial layout
     [self layoutImageView];
 }
@@ -98,9 +103,14 @@
     NSLog(@"mouseDown x:%lf y:%lf", mouseDownLoc.x, mouseDownLoc.y);
 
     if (self.selectionOverlayView) {
+        // Convert coordinates from MandelView to SelectionRectangleView coordinate system
+        NSPoint overlayPoint = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
+        NSLog(@"Starting selection overlay at (%f, %f) -> (%f, %f)", mouseDownLoc.x, mouseDownLoc.y, overlayPoint.x, overlayPoint.y);
         self.selectionOverlayView.shouldDrawRectangle = YES;
-        self.selectionOverlayView.selectionRectToDraw = NSMakeRect(mouseDownLoc.x, mouseDownLoc.y, 0, 0);
+        self.selectionOverlayView.selectionRectToDraw = NSMakeRect(overlayPoint.x, overlayPoint.y, 0, 0);
         [self.selectionOverlayView setNeedsDisplay:YES];
+    } else {
+        NSLog(@"ERROR: selectionOverlayView is nil!");
     }
 }
 
@@ -113,10 +123,14 @@
     NSPoint currentDragLoc = [self convertPoint:[event locationInWindow]
                                        fromView:nil];
     
-    CGFloat x1 = mouseDownLoc.x;
-    CGFloat y1 = mouseDownLoc.y;
-    CGFloat x2 = currentDragLoc.x;
-    CGFloat y2 = currentDragLoc.y;
+    // Convert both points to SelectionRectangleView coordinate system
+    NSPoint overlayStart = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
+    NSPoint overlayEnd = [self.selectionOverlayView convertPoint:currentDragLoc fromView:self];
+    
+    CGFloat x1 = overlayStart.x;
+    CGFloat y1 = overlayStart.y;
+    CGFloat x2 = overlayEnd.x;
+    CGFloat y2 = overlayEnd.y;
 
     self.selectionOverlayView.selectionRectToDraw = NSMakeRect(fmin(x1, x2), fmin(y1, y2), fabsl(x2 - x1), fabsl(y2 - y1));
     [self.selectionOverlayView setNeedsDisplay:YES];
@@ -246,9 +260,10 @@
     // Update image view frame
     self.imageView.frame = imageFrame;
     
-    // Update selection overlay to match
+    // Update selection overlay to match image view frame
     if (self.selectionOverlayView) {
         self.selectionOverlayView.frame = imageFrame;
+        NSLog(@"Updated selection overlay frame to: %@", NSStringFromRect(imageFrame));
     }
     
     // Position render time label in lower right corner of image view
@@ -304,6 +319,13 @@
     
     self.renderTimeLabel.stringValue = [NSString stringWithFormat:@"%.3fs", renderTime];
     [self positionRenderTimeLabel];
+}
+
+- (void)setupSelectionOverlayView {
+    NSLog(@"Creating SelectionRectangleView programmatically");
+    self.selectionOverlayView = [[SelectionRectangleView alloc] initWithFrame:self.bounds];
+    self.selectionOverlayView.shouldDrawRectangle = NO;
+    [self addSubview:self.selectionOverlayView];
 }
 
 @end
