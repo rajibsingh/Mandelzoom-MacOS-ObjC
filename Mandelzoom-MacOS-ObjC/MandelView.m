@@ -13,6 +13,9 @@
     NSPoint mouseDownLoc, mouseUpLoc;
     complex long double initialBottomLeft;
     complex long double initialTopRight;
+    BOOL isPanning;
+    complex long double panStartBottomLeft;
+    complex long double panStartTopRight;
 }
 
 - (void)awakeFromNib {
@@ -102,49 +105,73 @@
     mouseDownLoc = clickLocation;
     NSLog(@"mouseDown x:%lf y:%lf", mouseDownLoc.x, mouseDownLoc.y);
 
-    if (self.selectionOverlayView) {
-        // Convert coordinates from MandelView to SelectionRectangleView coordinate system
-        NSPoint overlayPoint = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
-        NSLog(@"Starting selection overlay at (%f, %f) -> (%f, %f)", mouseDownLoc.x, mouseDownLoc.y, overlayPoint.x, overlayPoint.y);
-        self.selectionOverlayView.shouldDrawRectangle = YES;
-        self.selectionOverlayView.selectionRectToDraw = NSMakeRect(overlayPoint.x, overlayPoint.y, 0, 0);
-        [self.selectionOverlayView setNeedsDisplay:YES];
+    // Check if Option/Alt key is held for selection mode, otherwise pan mode
+    isPanning = !([event modifierFlags] & NSEventModifierFlagOption);
+    
+    if (isPanning) {
+        // Store current view state for panning
+        panStartBottomLeft = renderer.bottomLeft;
+        panStartTopRight = renderer.topRight;
+        NSLog(@"Starting pan mode");
     } else {
-        NSLog(@"ERROR: selectionOverlayView is nil!");
+        // Selection mode
+        if (self.selectionOverlayView) {
+            // Convert coordinates from MandelView to SelectionRectangleView coordinate system
+            NSPoint overlayPoint = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
+            NSLog(@"Starting selection overlay at (%f, %f) -> (%f, %f)", mouseDownLoc.x, mouseDownLoc.y, overlayPoint.x, overlayPoint.y);
+            self.selectionOverlayView.shouldDrawRectangle = YES;
+            self.selectionOverlayView.selectionRectToDraw = NSMakeRect(overlayPoint.x, overlayPoint.y, 0, 0);
+            [self.selectionOverlayView setNeedsDisplay:YES];
+        } else {
+            NSLog(@"ERROR: selectionOverlayView is nil!");
+        }
     }
 }
 
 -(void)mouseDragged:(NSEvent *)event
 {
-    if (!self.selectionOverlayView || !self.selectionOverlayView.shouldDrawRectangle) {
-        return;
-    }
-
     NSPoint currentDragLoc = [self convertPoint:[event locationInWindow]
                                        fromView:nil];
     
-    // Convert both points to SelectionRectangleView coordinate system
-    NSPoint overlayStart = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
-    NSPoint overlayEnd = [self.selectionOverlayView convertPoint:currentDragLoc fromView:self];
-    
-    CGFloat x1 = overlayStart.x;
-    CGFloat y1 = overlayStart.y;
-    CGFloat x2 = overlayEnd.x;
-    CGFloat y2 = overlayEnd.y;
+    if (isPanning) {
+        // Pan mode: update the complex plane coordinates based on drag distance
+        [self performPanningWithCurrentLoc:currentDragLoc];
+    } else {
+        // Selection mode: update selection rectangle
+        if (!self.selectionOverlayView || !self.selectionOverlayView.shouldDrawRectangle) {
+            return;
+        }
 
-    self.selectionOverlayView.selectionRectToDraw = NSMakeRect(fmin(x1, x2), fmin(y1, y2), fabsl(x2 - x1), fabsl(y2 - y1));
-    [self.selectionOverlayView setNeedsDisplay:YES];
+        // Convert both points to SelectionRectangleView coordinate system
+        NSPoint overlayStart = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
+        NSPoint overlayEnd = [self.selectionOverlayView convertPoint:currentDragLoc fromView:self];
+        
+        CGFloat x1 = overlayStart.x;
+        CGFloat y1 = overlayStart.y;
+        CGFloat x2 = overlayEnd.x;
+        CGFloat y2 = overlayEnd.y;
+
+        self.selectionOverlayView.selectionRectToDraw = NSMakeRect(fmin(x1, x2), fmin(y1, y2), fabsl(x2 - x1), fabsl(y2 - y1));
+        [self.selectionOverlayView setNeedsDisplay:YES];
+    }
 }
 
 -(void)mouseUp: (NSEvent *)event
 {
+    NSPoint clickLocation = [self convertPoint:[event locationInWindow] fromView:nil];
+    mouseUpLoc = clickLocation;
+    
+    if (isPanning) {
+        // Finish panning - no additional action needed
+        NSLog(@"Finished panning");
+        return;
+    }
+    
+    // Selection mode
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
         [self.selectionOverlayView setNeedsDisplay:YES];
     }
-
-    NSPoint clickLocation = [self convertPoint:[event locationInWindow] fromView:nil];
-    mouseUpLoc = clickLocation;
     
     if (fabsl(mouseDownLoc.x - mouseUpLoc.x) < 5 || fabsl(mouseDownLoc.y - mouseUpLoc.y) < 5) {
         NSLog(@"Selection too small, not zooming.");
@@ -326,6 +353,35 @@
     self.selectionOverlayView = [[SelectionRectangleView alloc] initWithFrame:self.bounds];
     self.selectionOverlayView.shouldDrawRectangle = NO;
     [self addSubview:self.selectionOverlayView];
+}
+
+- (void)performPanningWithCurrentLoc:(NSPoint)currentLoc {
+    // Calculate drag distance in pixels
+    CGFloat deltaX = currentLoc.x - mouseDownLoc.x;
+    CGFloat deltaY = currentLoc.y - mouseDownLoc.y;
+    
+    // Get the current image view size to calculate the scale
+    NSSize imageSize = self.imageView.bounds.size;
+    if (imageSize.width == 0 || imageSize.height == 0) return;
+    
+    // Calculate the current complex plane dimensions
+    complex long double currentSpan = panStartTopRight - panStartBottomLeft;
+    long double realSpan = creall(currentSpan);
+    long double imagSpan = cimagl(currentSpan);
+    
+    // Convert pixel movement to complex plane movement
+    // Note: Y is inverted because screen coordinates increase downward
+    long double realDelta = -(deltaX / imageSize.width) * realSpan;
+    long double imagDelta = (deltaY / imageSize.height) * imagSpan;
+    
+    complex long double offset = realDelta + imagDelta * I;
+    
+    // Update renderer coordinates
+    renderer.bottomLeft = panStartBottomLeft + offset;
+    renderer.topRight = panStartTopRight + offset;
+    
+    // Re-render the image
+    [self setImage];
 }
 
 @end
