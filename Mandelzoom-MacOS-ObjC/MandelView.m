@@ -98,6 +98,19 @@
     return YES;
 }
 
+- (void)keyDown:(NSEvent *)event {
+    NSString *characters = [event characters];
+    if ([characters length] > 0) {
+        unichar character = [characters characterAtIndex:0];
+        
+        if (character == 27) { // Escape key
+            [self resetToOriginalView];
+        } else {
+            [super keyDown:event]; // Pass other keys to superclass
+        }
+    }
+}
+
 -(void)mouseDown:(NSEvent *)event
 {
     NSPoint clickLocation = [self convertPoint:[event locationInWindow]
@@ -162,8 +175,13 @@
     mouseUpLoc = clickLocation;
     
     if (isPanning) {
-        // Finish panning - no additional action needed
-        NSLog(@"Finished panning");
+        // Check if this was just a click (small movement) vs actual panning
+        CGFloat dragDistance = sqrt(pow(mouseUpLoc.x - mouseDownLoc.x, 2) + pow(mouseUpLoc.y - mouseDownLoc.y, 2));
+        if (dragDistance < 5) {
+            // Single click - zoom in 2x at the clicked point
+            [self performSingleClickZoomAtPoint:mouseDownLoc];
+        }
+        NSLog(@"Finished panning/clicking");
         return;
     }
     
@@ -379,6 +397,72 @@
     // Update renderer coordinates
     renderer.bottomLeft = panStartBottomLeft + offset;
     renderer.topRight = panStartTopRight + offset;
+    
+    // Re-render the image
+    [self setImage];
+}
+
+- (void)performSingleClickZoomAtPoint:(NSPoint)clickPoint {
+    NSLog(@"Single click zoom at point (%f, %f)", clickPoint.x, clickPoint.y);
+    
+    // Convert click point to complex plane coordinates
+    NSSize imageSize = self.imageView.bounds.size;
+    if (imageSize.width == 0 || imageSize.height == 0) return;
+    
+    // Get current complex plane bounds
+    complex long double currentBottomLeft = renderer.bottomLeft;
+    complex long double currentTopRight = renderer.topRight;
+    
+    long double realSpan = creall(currentTopRight) - creall(currentBottomLeft);
+    long double imagSpan = cimagl(currentTopRight) - cimagl(currentBottomLeft);
+    
+    // Convert click point from view coordinates to image coordinates
+    NSRect imageFrame = self.imageView.frame;
+    CGFloat relativeX = (clickPoint.x - imageFrame.origin.x) / imageFrame.size.width;
+    CGFloat relativeY = (clickPoint.y - imageFrame.origin.y) / imageFrame.size.height;
+    
+    // Clamp to image bounds
+    relativeX = fmax(0.0, fmin(1.0, relativeX));
+    relativeY = fmax(0.0, fmin(1.0, relativeY));
+    
+    // Convert to complex plane coordinates (note Y inversion)
+    long double clickReal = creall(currentBottomLeft) + relativeX * realSpan;
+    long double clickImag = cimagl(currentBottomLeft) + (1.0 - relativeY) * imagSpan;
+    complex long double clickComplex = clickReal + clickImag * I;
+    
+    NSLog(@"Click complex: %Lf + %Lfi", creall(clickComplex), cimagl(clickComplex));
+    
+    // Calculate new bounds for 2x zoom centered on click point
+    long double newRealSpan = realSpan / 2.0L;
+    long double newImagSpan = imagSpan / 2.0L;
+    
+    long double newBottomLeftReal = clickReal - newRealSpan / 2.0L;
+    long double newBottomLeftImag = clickImag - newImagSpan / 2.0L;
+    long double newTopRightReal = clickReal + newRealSpan / 2.0L;
+    long double newTopRightImag = clickImag + newImagSpan / 2.0L;
+    
+    // Update renderer coordinates
+    renderer.bottomLeft = newBottomLeftReal + newBottomLeftImag * I;
+    renderer.topRight = newTopRightReal + newTopRightImag * I;
+    
+    NSLog(@"New bounds: %Lf+%Lfi to %Lf+%Lfi", 
+          creall(renderer.bottomLeft), cimagl(renderer.bottomLeft),
+          creall(renderer.topRight), cimagl(renderer.topRight));
+    
+    // Re-render the image
+    [self setImage];
+}
+
+- (void)resetToOriginalView {
+    NSLog(@"Resetting to original view (Escape key pressed)");
+    
+    // Reset to initial coordinates
+    renderer.bottomLeft = initialBottomLeft;
+    renderer.topRight = initialTopRight;
+    
+    NSLog(@"Reset to bounds: %Lf+%Lfi to %Lf+%Lfi", 
+          creall(renderer.bottomLeft), cimagl(renderer.bottomLeft),
+          creall(renderer.topRight), cimagl(renderer.topRight));
     
     // Re-render the image
     [self setImage];
