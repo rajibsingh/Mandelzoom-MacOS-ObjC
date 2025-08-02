@@ -16,6 +16,7 @@
 @property (nonatomic, assign) complex long double topRight;
 
 -(NSImage*) render;
+-(NSImage*) renderWithWidth:(int)width height:(int)height;
 @end
 
 #endif /* MandelRenderer_h */

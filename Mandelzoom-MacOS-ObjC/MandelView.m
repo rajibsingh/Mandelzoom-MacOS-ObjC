@@ -25,13 +25,23 @@
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
     }
+    
+    // Ensure image view is set up for centering
+    if (self.imageView) {
+        self.imageView.imageAlignment = NSImageAlignCenter;
+        self.imageView.imageScaling = NSImageScaleProportionallyDown;
+    }
 }
 
 -(void) setImage {
     if (!renderer) {
         [self awakeFromNib];
     }
-    _imageView.image = [renderer render];
+    
+    NSSize viewSize = _imageView.bounds.size;
+    int resolution = [self calculateOptimalResolution:viewSize];
+    
+    _imageView.image = [renderer renderWithWidth:resolution height:resolution];
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
         [self.selectionOverlayView setNeedsDisplay:YES];
@@ -45,7 +55,11 @@
     }
     renderer.bottomLeft = initialBottomLeft;
     renderer.topRight = initialTopRight;
-    _imageView.image = [renderer render];
+    
+    NSSize viewSize = _imageView.bounds.size;
+    int resolution = [self calculateOptimalResolution:viewSize];
+    
+    _imageView.image = [renderer renderWithWidth:resolution height:resolution];
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
         [self.selectionOverlayView setNeedsDisplay:YES];
@@ -159,7 +173,28 @@
     renderer.bottomLeft = new_bl_cand;
     renderer.topRight = new_tr_cand;
     
-    _imageView.image = [renderer render];
+    NSSize viewSize = _imageView.bounds.size;
+    int resolution = [self calculateOptimalResolution:viewSize];
+    
+    _imageView.image = [renderer renderWithWidth:resolution height:resolution];
+}
+
+- (int)calculateOptimalResolution:(NSSize)viewSize {
+    if (viewSize.width <= 0 || viewSize.height <= 0) {
+        return 1000; // Default fallback
+    }
+    
+    // Use the smaller dimension to maintain 1:1 aspect ratio
+    int minDimension = (int)fmin(viewSize.width, viewSize.height);
+    
+    // Ensure minimum quality and reasonable performance
+    if (minDimension < 300) {
+        return 300;
+    } else if (minDimension > 2000) {
+        return 2000; // Cap for performance
+    }
+    
+    return minDimension;
 }
 
 @end

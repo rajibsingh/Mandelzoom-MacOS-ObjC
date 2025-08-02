@@ -14,34 +14,6 @@
 
 //use of complex type from https://stackoverflow.com/questions/12980052/are-complex-numbers-already-defined-in-objective-c
 
-// h (hue): 0-360, s (saturation): 0-1, b (brightness): 0-1
-static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, UInt8 *g_out, UInt8 *b_out) {
-    if (s == 0) { // Achromatic (grey)
-        *r_out = *g_out = *b_out = (UInt8)(v * 255.0L);
-        return;
-    }
-
-    long double hue_sector = floorl(h / 60.0L);
-    long double hue_fractional = (h / 60.0L) - hue_sector;
-
-    long double p = v * (1.0L - s);
-    long double q = v * (1.0L - s * hue_fractional);
-    long double t = v * (1.0L - s * (1.0L - hue_fractional));
-
-    long double r_temp=0, g_temp=0, b_temp=0;
-
-    switch ((int)hue_sector) {
-        case 0: r_temp = v; g_temp = t; b_temp = p; break;
-        case 1: r_temp = q; g_temp = v; b_temp = p; break;
-        case 2: r_temp = p; g_temp = v; b_temp = t; break;
-        case 3: r_temp = p; g_temp = q; b_temp = v; break;
-        case 4: r_temp = t; g_temp = p; b_temp = v; break;
-        default:r_temp = v; g_temp = p; b_temp = q; break; // case 5
-    }
-    *r_out = (UInt8)(r_temp * 255.0L);
-    *g_out = (UInt8)(g_temp * 255.0L);
-    *b_out = (UInt8)(b_temp * 255.0L);
-}
 
 @implementation MandelRenderer
 {
@@ -52,7 +24,9 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
         UInt8 bChannel;
     };
     
-    struct pixel data[1000][1000];
+    struct pixel *data;
+    int currentWidth;
+    int currentHeight;
     complex long double _bottomLeft;
     complex long double _topRight;
 }
@@ -63,32 +37,50 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
 - (instancetype)init {
     self = [super init];
     if (self) {
-        // Default coordinates for the initial full view
-        _bottomLeft = -2.1L - 1.35L * I;
-        _topRight = 0.6L + 1.35L * I;
+        // Default coordinates for the classic full Mandelbrot view
+        _bottomLeft = -2.5L - 1.25L * I;
+        _topRight = 1.0L + 1.25L * I;
+        data = NULL;
+        currentWidth = 0;
+        currentHeight = 0;
     }
     return self;
 }
 
--(void) setup {
+-(void) setupWithWidth:(int)width height:(int)height {
+    if (data && (width != currentWidth || height != currentHeight)) {
+        free(data);
+        data = NULL;
+    }
+    
+    if (!data) {
+        currentWidth = width;
+        currentHeight = height;
+        data = malloc(width * height * sizeof(struct pixel));
+        if (!data) {
+            NSLog(@"Error: Failed to allocate memory for pixel data");
+            return;
+        }
+    }
+    
     clock_t start, end;
     start = clock();
     
     complex long double bl_coord = self.bottomLeft;
     complex long double tr_coord = self.topRight;
 
-    long double stepX = fabsl(creal(tr_coord) - creal(bl_coord)) / 1000L;
-    long double stepY = fabsl(cimag(tr_coord) - cimag(bl_coord)) / 1000L;
+    long double stepX = fabsl(creal(tr_coord) - creal(bl_coord)) / (long double)width;
+    long double stepY = fabsl(cimag(tr_coord) - cimag(bl_coord)) / (long double)height;
     
     const long double ESCAPE_RADIUS_SQUARED = 256.0L;
     int MAXITERATIONS = 500;
 
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-    dispatch_apply(1000, queue, ^(size_t yDataPos_idx) {
+    dispatch_apply(height, queue, ^(size_t yDataPos_idx) {
         int yDataPos = (int)yDataPos_idx;
 
-        for (int xDataPos = 0; xDataPos < 1000; xDataPos++) {
+        for (int xDataPos = 0; xDataPos < width; xDataPos++) {
             long double x0 = creal(bl_coord) + stepX * xDataPos;
             long double y0 = cimag(bl_coord) + stepY * yDataPos;
             
@@ -112,28 +104,28 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
             struct pixel pxl;
 
             if (iteration == MAXITERATIONS) {
+                // Interior points: black
                 pxl.rChannel = 0;
                 pxl.gChannel = 0;
                 pxl.bChannel = 0;
             } else {
+                // Classic blue Mandelbrot coloring
                 long double smooth_iteration = iteration + 1.0L - log2l(0.5L * log2l(modulus_squared));
-
-                long double color_density = 0.055L;
-                long double hue_0_to_1 = fmodl(smooth_iteration * color_density, 1.0L);
                 
-                if (hue_0_to_1 < 0.0L) {
-                    hue_0_to_1 += 1.0L;
-                }
+                // Simple blue gradient based on iteration count
+                long double t = smooth_iteration / 50.0L; // Scale for better gradient
+                t = fminl(t, 1.0L);
                 
-                long double base_hue_degrees = hue_0_to_1 * 360.0L;
-                long double hue_offset_degrees = 43.0L;
-                long double final_hue_degrees = fmodl(base_hue_degrees + hue_offset_degrees, 360.0L);
+                // Deep blue (0,0,128) to bright white (255,255,255)
+                long double intensity = powl(t, 0.5L); // Gamma correction for better gradient
                 
-                hsbToRgb(final_hue_degrees, 1.0L, 1.0L, &pxl.rChannel, &pxl.gChannel, &pxl.bChannel);
+                pxl.rChannel = (UInt8)(intensity * 255.0L);
+                pxl.gChannel = (UInt8)(intensity * 255.0L);
+                pxl.bChannel = (UInt8)(128.0L + intensity * 127.0L); // Start from blue, go to white
             }
             
             pxl.aChannel = 255;
-            data[yDataPos][xDataPos] = pxl;
+            data[yDataPos * width + xDataPos] = pxl;
         }
     });
 
@@ -142,9 +134,11 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
 }
 
 -(NSImage*) render {
-    [self setup];
-    int width = 1000;
-    int height = 1000;
+    return [self renderWithWidth:1000 height:1000];
+}
+
+-(NSImage*) renderWithWidth:(int)width height:(int)height {
+    [self setupWithWidth:width height:height];
     size_t bufferLength = width * height * 4;
     CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, bufferLength, NULL);
     size_t bitsPerComponent = 8;
@@ -173,6 +167,13 @@ static void hsbToRgb(long double h, long double s, long double v, UInt8 *r_out, 
     CGImageRelease(iref);
 
     return image;
+}
+
+- (void)dealloc {
+    if (data) {
+        free(data);
+        data = NULL;
+    }
 }
 
 @end

@@ -712,7 +712,7 @@
                             <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="avH-Q3-zBm">
                                 <rect key="frame" x="0.0" y="0.0" width="1000" height="500"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" id="Spc-LS-0w3"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="center" imageScaling="proportionallyDown" id="Spc-LS-0w3"/>
                                 <color key="contentTintColor" name="AccentColor"/>
                             </imageView>
                             <customView identifier="SelectionRectangleView" translatesAutoresizingMaskIntoConstraints="NO" id="949-ej-eh2">
