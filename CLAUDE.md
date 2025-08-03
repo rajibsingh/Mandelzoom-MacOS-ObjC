@@ -31,14 +31,20 @@ This is a macOS application written in Objective-C that generates and displays t
    - Render time display overlay
    - Escape key to reset to original view
 
-
+3. **Bookmark System**: Complete bookmark management for saving and restoring Mandelbrot views:
+   - **MandelbrotBookmark** (`MandelbrotBookmark.h/m`): Data model representing saved views with coordinates, metadata, and computed properties
+   - **BookmarkManager** (`BookmarkManager.h/m`): Singleton manager for bookmark persistence and retrieval with NSUserDefaults storage
+   - **AddBookmarkViewController** (`AddBookmarkViewController.h/m`): Dialog for creating new bookmarks with title, description, and coordinate display
+   - **OpenBookmarkViewController** (`OpenBookmarkViewController.h/m`): Table view interface for browsing, selecting, and deleting saved bookmarks
+   - **ExportBookmarkViewController** (`ExportBookmarkViewController.h/m`): Interface for selecting and exporting bookmarks to file
 
 4. **ViewController** (`ViewController.h/m`): Main view controller that coordinates between the UI elements and the Mandelbrot view.
 
 5. **AppDelegate** (`AppDelegate.h/m`): Application delegate that manages:
    - Settings persistence using NSUserDefaults
-   - Menu bar setup with Settings submenu
+   - Menu bar setup with Settings and Bookmarks submenus
    - Save image functionality
+   - Bookmark menu actions and dialogs
    - Application-wide preferences (magnification level, info panel visibility, render time display)
 
 6. **Settings System**:
@@ -60,16 +66,18 @@ This is a macOS application written in Objective-C that generates and displays t
 - **Coordinate System Mapping**: Complex mathematical coordinate system mapped to screen pixel coordinates for rendering and interaction
 - **Hybrid Rendering**: Automatic selection between Metal GPU acceleration and multithreaded CPU fallback
 - **Settings Architecture**: Centralized settings in AppDelegate with NSUserDefaults persistence and NSNotificationCenter for real-time updates
+- **Bookmark System**: Singleton BookmarkManager with delegate pattern for UI controllers and NSCoding for persistence
 - **Interactive Zooming**: Multiple zoom modes (selection rectangle, click zoom, pan) with mathematical precision
 
 ### Data Flow
-1. User interacts with MandelView (mouse events, keyboard shortcuts)
-2. MandelView calculates new complex coordinate bounds based on interaction type
+1. User interacts with MandelView (mouse events, keyboard shortcuts) or bookmark system
+2. MandelView calculates new complex coordinate bounds based on interaction type or loaded bookmark
 3. MandelRenderer automatically selects optimal rendering path (GPU vs CPU)
 4. For GPU: Metal compute shader processes pixels in parallel on Apple Silicon
 5. For CPU: GCD-based multithreaded rendering with optimized algorithms
 6. Rendered NSImage is displayed in the imageView with overlay information
-7. Settings changes propagate via NSNotificationCenter to update UI elements
+7. Settings and bookmark changes propagate via NSNotificationCenter and delegate patterns to update UI elements
+8. BookmarkManager handles persistence of saved views to NSUserDefaults with automatic serialization
 
 ## User Interface Features
 - **Interactive Navigation**: 
@@ -78,6 +86,11 @@ This is a macOS application written in Objective-C that generates and displays t
   - Click: 2x zoom in at point
   - Command+click: 2x zoom out at point
   - Escape: Reset to original full view
+- **Bookmark Management**:
+  - **Add Bookmark**: Save current view coordinates with custom title and description
+  - **Open Bookmarks**: Browse saved bookmarks in a table view with details and deletion options
+  - **Export Bookmarks**: Select and export bookmarks to JSON file for sharing or backup
+  - **Menu Integration**: Bookmark actions accessible via dedicated Bookmarks menu
 - **Info Panel**: Displays current X/Y ranges, magnification level, and real-time mouse coordinates
 - **Render Time Display**: Shows rendering performance in lower-right corner
 - **Settings Window**: Accessible via app menu with persistent preferences
@@ -90,7 +103,7 @@ This is a macOS application written in Objective-C that generates and displays t
 - The application maintains initial coordinate bounds for reset functionality
 - All UI interactions are handled through standard Cocoa patterns (IBOutlets, mouse events, notifications)
 - Settings persistence uses NSUserDefaults with immediate synchronization
-- The current branch is `develop` with recent GPU acceleration and settings improvements
+- The current branch is `bookmarks` with recent bookmark management system implementation
 
 ## Performance Optimizations
 - **Metal GPU Acceleration**: Compute shaders leverage Apple Silicon for parallel pixel computation
