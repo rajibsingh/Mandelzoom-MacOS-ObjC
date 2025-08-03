@@ -176,54 +176,21 @@
     mouseDownLoc = clickLocation;
     NSLog(@"mouseDown x:%lf y:%lf", mouseDownLoc.x, mouseDownLoc.y);
 
-    // Check if Option/Alt key is held for selection mode, otherwise pan mode
-    isPanning = !([event modifierFlags] & NSEventModifierFlagOption);
+    // Start panning mode
+    isPanning = YES;
     
-    if (isPanning) {
-        // Store current view state for panning
-        panStartBottomLeft = renderer.bottomLeft;
-        panStartTopRight = renderer.topRight;
-        NSLog(@"Starting pan mode");
-    } else {
-        // Selection mode
-        if (self.selectionOverlayView) {
-            // Convert coordinates from MandelView to SelectionRectangleView coordinate system
-            NSPoint overlayPoint = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
-            NSLog(@"Starting selection overlay at (%f, %f) -> (%f, %f)", mouseDownLoc.x, mouseDownLoc.y, overlayPoint.x, overlayPoint.y);
-            self.selectionOverlayView.shouldDrawRectangle = YES;
-            self.selectionOverlayView.selectionRectToDraw = NSMakeRect(overlayPoint.x, overlayPoint.y, 0, 0);
-            [self.selectionOverlayView setNeedsDisplay:YES];
-        } else {
-            NSLog(@"ERROR: selectionOverlayView is nil!");
-        }
-    }
+    // Store current view state for panning
+    panStartBottomLeft = renderer.bottomLeft;
+    panStartTopRight = renderer.topRight;
+    NSLog(@"Starting pan mode");
 }
 
 -(void)mouseDragged:(NSEvent *)event
 {
-    NSPoint currentDragLoc = [self convertPoint:[event locationInWindow]
-                                       fromView:nil];
-    
     if (isPanning) {
-        // Pan mode: update the complex plane coordinates based on drag distance
+        NSPoint currentDragLoc = [self convertPoint:[event locationInWindow]
+                                           fromView:nil];
         [self performPanningWithCurrentLoc:currentDragLoc];
-    } else {
-        // Selection mode: update selection rectangle
-        if (!self.selectionOverlayView || !self.selectionOverlayView.shouldDrawRectangle) {
-            return;
-        }
-
-        // Convert both points to SelectionRectangleView coordinate system
-        NSPoint overlayStart = [self.selectionOverlayView convertPoint:mouseDownLoc fromView:self];
-        NSPoint overlayEnd = [self.selectionOverlayView convertPoint:currentDragLoc fromView:self];
-        
-        CGFloat x1 = overlayStart.x;
-        CGFloat y1 = overlayStart.y;
-        CGFloat x2 = overlayEnd.x;
-        CGFloat y2 = overlayEnd.y;
-
-        self.selectionOverlayView.selectionRectToDraw = NSMakeRect(fmin(x1, x2), fmin(y1, y2), fabsl(x2 - x1), fabsl(y2 - y1));
-        [self.selectionOverlayView setNeedsDisplay:YES];
     }
 }
 
@@ -233,94 +200,28 @@
     mouseUpLoc = clickLocation;
     
     if (isPanning) {
-        // Check if this was just a click (small movement) vs actual panning
+        // Check if this was a click (small movement) or a drag.
         CGFloat dragDistance = sqrt(pow(mouseUpLoc.x - mouseDownLoc.x, 2) + pow(mouseUpLoc.y - mouseDownLoc.y, 2));
+        
         if (dragDistance < 5) {
-            // Check for command-click (zoom out) vs regular click (zoom in)
+            // It was a click, so perform zoom.
+            // Restore the original coordinates before zooming to avoid a small pan offset.
+            renderer.bottomLeft = panStartBottomLeft;
+            renderer.topRight = panStartTopRight;
+
             if ([event modifierFlags] & NSEventModifierFlagCommand) {
-                // Command-click - zoom out 2x at the clicked point
+                // Command-click - zoom out.
                 [self performSingleClickZoomOutAtPoint:mouseDownLoc];
             } else {
-                // Regular click - zoom in 2x at the clicked point
+                // Regular click - zoom in.
                 [self performSingleClickZoomAtPoint:mouseDownLoc];
             }
         }
+        // If it was a drag, the panning is already done in mouseDragged.
         NSLog(@"Finished panning/clicking");
-        return;
     }
     
-    // Selection mode
-    if (self.selectionOverlayView) {
-        self.selectionOverlayView.shouldDrawRectangle = NO;
-        [self.selectionOverlayView setNeedsDisplay:YES];
-    }
-    
-    if (fabsl(mouseDownLoc.x - mouseUpLoc.x) < 5 || fabsl(mouseDownLoc.y - mouseUpLoc.y) < 5) {
-        NSLog(@"Selection too small, not zooming.");
-        return;
-    }
-
-    NSLog(@"mouseUp x:%lf y:%lf. Zooming.", mouseUpLoc.x, mouseUpLoc.y);
-
-    if (!renderer) {
-        NSLog(@"Error: Renderer not initialized in mouseUp!");
-        return;
-    }
-
-    CGFloat viewWidth = self.bounds.size.width;
-    CGFloat viewHeight = self.bounds.size.height;
-
-    complex long double current_bl = renderer.bottomLeft;
-    complex long double current_tr = renderer.topRight;
-
-    long double current_bl_real = creall(current_bl);
-    long double current_tr_real = creall(current_tr);
-    long double current_bl_imag = cimagl(current_bl);
-    long double current_tr_imag = cimagl(current_tr);
-
-    long double complexPlaneWidth = current_tr_real - current_bl_real;
-    long double complexPlaneHeight = current_tr_imag - current_bl_imag;
-
-    long double sel_minPixelX = fminl(mouseDownLoc.x, mouseUpLoc.x);
-    long double sel_maxPixelX = fmaxl(mouseDownLoc.x, mouseUpLoc.x);
-    long double sel_minPixelY_view = fminl(mouseDownLoc.y, mouseUpLoc.y);
-    long double sel_maxPixelY_view = fmaxl(mouseDownLoc.y, mouseUpLoc.y);
-    
-    complex long double new_bl_cand, new_tr_cand;
-    
-    new_bl_cand = (current_bl_real + (sel_minPixelX / viewWidth) * complexPlaneWidth) +
-                  (current_bl_imag + ((viewHeight - sel_maxPixelY_view) / viewHeight) * complexPlaneHeight) * I;
-                  
-    new_tr_cand = (current_bl_real + (sel_maxPixelX / viewWidth) * complexPlaneWidth) +
-                  (current_bl_imag + ((viewHeight - sel_minPixelY_view) / viewHeight) * complexPlaneHeight) * I;
-    
-    long double new_cand_width = creall(new_tr_cand) - creall(new_bl_cand);
-    long double new_cand_height = cimagl(new_tr_cand) - cimagl(new_bl_cand);
-
-    if (new_cand_width <= 0 || new_cand_height <= 0) {
-        NSLog(@"Invalid zoom selection (zero or negative width/height).");
-        return;
-    }
-    
-    if (new_cand_width > new_cand_height) {
-        long double diff = new_cand_width - new_cand_height;
-        new_bl_cand = creall(new_bl_cand) + (cimagl(new_bl_cand) - diff / 2.0L) * I;
-        new_tr_cand = creall(new_tr_cand) + (cimagl(new_tr_cand) + diff / 2.0L) * I;
-    } else if (new_cand_height > new_cand_width) {
-        long double diff = new_cand_height - new_cand_width;
-        new_bl_cand = (creall(new_bl_cand) - diff / 2.0L) + cimagl(new_bl_cand) * I;
-        new_tr_cand = (creall(new_tr_cand) + diff / 2.0L) + cimagl(new_tr_cand) * I;
-    }
-
-    renderer.bottomLeft = new_bl_cand;
-    renderer.topRight = new_tr_cand;
-    
-    NSSize viewSize = _imageView.bounds.size;
-    int resolution = [self calculateOptimalResolution:viewSize];
-    
-    double renderTime;
-    _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
-    [self updateRenderTimeDisplay:renderTime];
+    isPanning = NO;
 }
 
 - (int)calculateOptimalResolution:(NSSize)viewSize {
