@@ -93,7 +93,7 @@
         @"xMax": @(self.xMax),
         @"yMin": @(self.yMin),
         @"yMax": @(self.yMax),
-        @"dateCreated": self.dateCreated,
+        @"dateCreated": [self.dateCreated description],  // Convert NSDate to string for JSON compatibility
         @"uniqueIdentifier": self.uniqueIdentifier
     };
 }

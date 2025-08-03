@@ -1,41 +1,33 @@
 //
-//  OpenBookmarkViewController.m
+//  ExportBookmarkViewController.m
 //  Mandelzoom-MacOS-ObjC
 //
 
-#import "OpenBookmarkViewController.h"
+#import "ExportBookmarkViewController.h"
 #import "BookmarkManager.h"
 
-@implementation OpenBookmarkViewController
+@implementation ExportBookmarkViewController
 
 - (void)viewDidLoad {
-    NSLog(@"OpenBookmarkViewController viewDidLoad called");
     [super viewDidLoad];
-    NSLog(@"About to call setupUI");
     [self setupUI];
-    NSLog(@"setupUI completed, about to load bookmarks directly");
-    // Load bookmarks directly without calling refreshBookmarks to avoid hanging
-    self.bookmarks = [[BookmarkManager sharedManager] getAllBookmarks];
-    NSLog(@"Loaded %lu bookmarks directly", (unsigned long)self.bookmarks.count);
-    NSLog(@"viewDidLoad completed");
+    [self refreshBookmarks];
 }
 
 - (void)setupUI {
-    NSLog(@"setupUI starting");
-    self.view.frame = NSMakeRect(0, 0, 900, 600);
-    NSLog(@"View frame set");
+    self.view.frame = NSMakeRect(0, 0, 950, 500);
     
-    // Title label
-    NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 560, 200, 20)];
-    titleLabel.editable = NO;
-    titleLabel.bezeled = NO;
-    titleLabel.drawsBackground = NO;
-    titleLabel.stringValue = @"Saved Bookmarks";
-    titleLabel.font = [NSFont systemFontOfSize:16 weight:NSFontWeightSemibold];
-    [self.view addSubview:titleLabel];
+    // Title/instruction label
+    self.instructionLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 450, 910, 30)];
+    self.instructionLabel.editable = NO;
+    self.instructionLabel.bezeled = NO;
+    self.instructionLabel.drawsBackground = NO;
+    self.instructionLabel.stringValue = @"Select a bookmark to export:";
+    self.instructionLabel.font = [NSFont systemFontOfSize:16 weight:NSFontWeightSemibold];
+    [self.view addSubview:self.instructionLabel];
     
     // Table view with scroll view
-    self.scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(20, 150, 860, 400)];
+    self.scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(20, 100, 910, 340)];
     self.scrollView.hasVerticalScroller = YES;
     self.scrollView.borderType = NSBezelBorder;
     
@@ -48,8 +40,8 @@
     // Create columns
     NSTableColumn *titleColumn = [[NSTableColumn alloc] initWithIdentifier:@"title"];
     titleColumn.title = @"Title";
-    titleColumn.width = 180;
-    titleColumn.minWidth = 120;
+    titleColumn.width = 140;
+    titleColumn.minWidth = 100;
     [self.tableView addTableColumn:titleColumn];
     
     NSTableColumn *descriptionColumn = [[NSTableColumn alloc] initWithIdentifier:@"description"];
@@ -60,65 +52,47 @@
     
     NSTableColumn *magnificationColumn = [[NSTableColumn alloc] initWithIdentifier:@"magnification"];
     magnificationColumn.title = @"Magnification";
-    magnificationColumn.width = 100;
-    magnificationColumn.minWidth = 80;
+    magnificationColumn.width = 110;
+    magnificationColumn.minWidth = 90;
     [self.tableView addTableColumn:magnificationColumn];
     
     NSTableColumn *coordinatesColumn = [[NSTableColumn alloc] initWithIdentifier:@"coordinates"];
     coordinatesColumn.title = @"Coordinates";
-    coordinatesColumn.width = 220;
-    coordinatesColumn.minWidth = 180;
+    coordinatesColumn.width = 280;
+    coordinatesColumn.minWidth = 250;
     [self.tableView addTableColumn:coordinatesColumn];
     
     NSTableColumn *dateColumn = [[NSTableColumn alloc] initWithIdentifier:@"date"];
     dateColumn.title = @"Date Created";
-    dateColumn.width = 160;
-    dateColumn.minWidth = 140;
+    dateColumn.width = 120;
+    dateColumn.minWidth = 100;
     [self.tableView addTableColumn:dateColumn];
     
     self.scrollView.documentView = self.tableView;
     [self.view addSubview:self.scrollView];
     
-    // Details label
-    self.detailsLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 80, 860, 60)];
-    self.detailsLabel.editable = NO;
-    self.detailsLabel.bezeled = NO;
-    self.detailsLabel.drawsBackground = NO;
-    self.detailsLabel.font = [NSFont systemFontOfSize:12];
-    self.detailsLabel.textColor = [NSColor secondaryLabelColor];
-    self.detailsLabel.stringValue = @"Select a bookmark to view details";
-    self.detailsLabel.maximumNumberOfLines = 3;
-    self.detailsLabel.lineBreakMode = NSLineBreakByWordWrapping;
-    [self.view addSubview:self.detailsLabel];
-    
     // Buttons
     self.cancelButton = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancel:)];
-    self.cancelButton.frame = NSMakeRect(620, 20, 80, 32);
+    self.cancelButton.frame = NSMakeRect(750, 30, 80, 32);
     [self.view addSubview:self.cancelButton];
     
-    self.deleteButton = [NSButton buttonWithTitle:@"Delete" target:self action:@selector(deleteBookmark:)];
-    self.deleteButton.frame = NSMakeRect(710, 20, 80, 32);
-    self.deleteButton.enabled = NO;
-    [self.view addSubview:self.deleteButton];
-    
-    self.openButton = [NSButton buttonWithTitle:@"Open" target:self action:@selector(openBookmark:)];
-    self.openButton.frame = NSMakeRect(800, 20, 80, 32);
-    self.openButton.keyEquivalent = @"\r"; // Enter key
-    self.openButton.enabled = NO;
-    [self.view addSubview:self.openButton];
+    self.exportButton = [NSButton buttonWithTitle:@"Export" target:self action:@selector(exportBookmark:)];
+    self.exportButton.frame = NSMakeRect(850, 30, 80, 32);
+    self.exportButton.keyEquivalent = @"\\r"; // Enter key
+    self.exportButton.enabled = NO;
+    [self.view addSubview:self.exportButton];
 }
 
 - (void)refreshBookmarks {
-    NSLog(@"refreshBookmarks starting");
     self.bookmarks = [[BookmarkManager sharedManager] getAllBookmarks];
-    NSLog(@"Got %lu bookmarks, about to reload table", (unsigned long)self.bookmarks.count);
     [self.tableView reloadData];
-    NSLog(@"Table reloaded");
     
     if (self.bookmarks.count == 0) {
-        self.detailsLabel.stringValue = @"No bookmarks saved yet";
+        self.instructionLabel.stringValue = @"No bookmarks available to export. Please create some bookmarks first.";
+        self.exportButton.enabled = NO;
+    } else {
+        self.instructionLabel.stringValue = @"Select a bookmark to export:";
     }
-    NSLog(@"refreshBookmarks ending");
 }
 
 #pragma mark - NSTableViewDataSource
@@ -164,8 +138,8 @@
         NSString *desc = bookmark.bookmarkDescription;
         if (desc.length > 0) {
             // Truncate long descriptions for table display
-            if (desc.length > 50) {
-                desc = [[desc substringToIndex:47] stringByAppendingString:@"..."];
+            if (desc.length > 40) {
+                desc = [[desc substringToIndex:37] stringByAppendingString:@"..."];
             }
             cellView.textField.stringValue = desc;
         } else {
@@ -182,13 +156,13 @@
             cellView.textField.stringValue = [NSString stringWithFormat:@"%.2f×", mag];
         }
     } else if ([identifier isEqualToString:@"coordinates"]) {
-        cellView.textField.stringValue = [NSString stringWithFormat:@"(%.3f, %.3f) to (%.3f, %.3f)", 
+        cellView.textField.stringValue = [NSString stringWithFormat:@"(%.4f, %.4f) to (%.4f, %.4f)", 
                                          bookmark.xMin, bookmark.yMin, bookmark.xMax, bookmark.yMax];
-        cellView.textField.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
+        cellView.textField.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
     } else if ([identifier isEqualToString:@"date"]) {
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         formatter.dateStyle = NSDateFormatterShortStyle;
-        formatter.timeStyle = NSDateFormatterShortStyle;
+        formatter.timeStyle = NSDateFormatterNoStyle;
         cellView.textField.stringValue = [formatter stringFromDate:bookmark.dateCreated];
         cellView.textField.font = [NSFont systemFontOfSize:11];
     }
@@ -200,54 +174,25 @@
     NSInteger selectedRow = self.tableView.selectedRow;
     BOOL hasSelection = selectedRow >= 0 && selectedRow < self.bookmarks.count;
     
-    self.openButton.enabled = hasSelection;
-    self.deleteButton.enabled = hasSelection;
-    
-    if (hasSelection) {
-        MandelbrotBookmark *bookmark = self.bookmarks[selectedRow];
-        self.detailsLabel.stringValue = [NSString stringWithFormat:@"Description: %@", 
-                                        bookmark.bookmarkDescription.length > 0 ? bookmark.bookmarkDescription : @"No description"];
-    } else {
-        self.detailsLabel.stringValue = @"Select a bookmark to view details";
-    }
+    self.exportButton.enabled = hasSelection;
 }
 
 #pragma mark - Actions
 
-- (IBAction)openBookmark:(id)sender {
+- (IBAction)exportBookmark:(id)sender {
     NSInteger selectedRow = self.tableView.selectedRow;
     if (selectedRow >= 0 && selectedRow < self.bookmarks.count) {
         MandelbrotBookmark *bookmark = self.bookmarks[selectedRow];
         
-        if ([self.delegate respondsToSelector:@selector(openBookmarkViewController:didOpenBookmark:)]) {
-            [self.delegate openBookmarkViewController:self didOpenBookmark:bookmark];
-        }
-    }
-}
-
-- (IBAction)deleteBookmark:(id)sender {
-    NSInteger selectedRow = self.tableView.selectedRow;
-    if (selectedRow >= 0 && selectedRow < self.bookmarks.count) {
-        MandelbrotBookmark *bookmark = self.bookmarks[selectedRow];
-        
-        NSAlert *alert = [[NSAlert alloc] init];
-        alert.messageText = @"Delete Bookmark";
-        alert.informativeText = [NSString stringWithFormat:@"Are you sure you want to delete the bookmark \"%@\"?", bookmark.title];
-        alert.alertStyle = NSAlertStyleWarning;
-        [alert addButtonWithTitle:@"Delete"];
-        [alert addButtonWithTitle:@"Cancel"];
-        
-        NSModalResponse response = [alert runModal];
-        if (response == NSAlertFirstButtonReturn) {
-            [[BookmarkManager sharedManager] removeBookmark:bookmark];
-            [self refreshBookmarks];
+        if ([self.delegate respondsToSelector:@selector(exportBookmarkViewController:didExportBookmark:)]) {
+            [self.delegate exportBookmarkViewController:self didExportBookmark:bookmark];
         }
     }
 }
 
 - (IBAction)cancel:(id)sender {
-    if ([self.delegate respondsToSelector:@selector(openBookmarkViewControllerDidCancel:)]) {
-        [self.delegate openBookmarkViewControllerDidCancel:self];
+    if ([self.delegate respondsToSelector:@selector(exportBookmarkViewControllerDidCancel:)]) {
+        [self.delegate exportBookmarkViewControllerDidCancel:self];
     }
 }
 
