@@ -9,11 +9,18 @@
 #define MandelRenderer_h
 
 #import <AppKit/AppKit.h>
+#import <Metal/Metal.h>
 #include <complex.h>
 
 @interface MandelRenderer : NSObject
 @property (nonatomic, assign) complex long double bottomLeft;
 @property (nonatomic, assign) complex long double topRight;
+
+// Metal GPU acceleration properties
+@property (nonatomic, strong) id<MTLDevice> metalDevice;
+@property (nonatomic, strong) id<MTLCommandQueue> commandQueue;
+@property (nonatomic, strong) id<MTLComputePipelineState> computePipeline;
+@property (nonatomic, assign) BOOL useGPUAcceleration;
 
 -(NSImage*) render;
 -(NSImage*) renderWithWidth:(int)width height:(int)height;

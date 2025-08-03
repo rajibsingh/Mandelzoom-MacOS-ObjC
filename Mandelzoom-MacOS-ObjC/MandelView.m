@@ -53,6 +53,9 @@
         [self setupSelectionOverlayView];
     }
     
+    // Set up mouse tracking for real-time coordinates
+    [self setupMouseTracking];
+    
     // Initial layout
     [self layoutImageView];
 }
@@ -114,6 +117,47 @@
             [super keyDown:event]; // Pass other keys to superclass
         }
     }
+}
+
+- (void)mouseMoved:(NSEvent *)event {
+    [self updateMouseCoordinates:event];
+}
+
+- (void)updateMouseCoordinates:(NSEvent *)event {
+    if (!renderer || !self.imageView || !self.mouseXLabel || !self.mouseYLabel) return;
+    
+    NSPoint mouseLocation = [self convertPoint:[event locationInWindow] fromView:nil];
+    
+    // Check if mouse is within the image view bounds
+    NSRect imageFrame = self.imageView.frame;
+    if (!NSPointInRect(mouseLocation, imageFrame)) {
+        self.mouseXLabel.stringValue = @"Mouse X: --";
+        self.mouseYLabel.stringValue = @"Mouse Y: --";
+        return;
+    }
+    
+    // Convert mouse location to complex plane coordinates
+    CGFloat relativeX = (mouseLocation.x - imageFrame.origin.x) / imageFrame.size.width;
+    CGFloat relativeY = (mouseLocation.y - imageFrame.origin.y) / imageFrame.size.height;
+    
+    // Clamp to image bounds
+    relativeX = fmax(0.0, fmin(1.0, relativeX));
+    relativeY = fmax(0.0, fmin(1.0, relativeY));
+    
+    // Get current complex plane bounds
+    complex long double currentBottomLeft = renderer.bottomLeft;
+    complex long double currentTopRight = renderer.topRight;
+    
+    long double realSpan = creall(currentTopRight) - creall(currentBottomLeft);
+    long double imagSpan = cimagl(currentTopRight) - cimagl(currentBottomLeft);
+    
+    // Convert to complex plane coordinates (note Y inversion)
+    long double mouseReal = creall(currentBottomLeft) + relativeX * realSpan;
+    long double mouseImag = cimagl(currentBottomLeft) + (1.0 - relativeY) * imagSpan;
+    
+    // Update labels
+    self.mouseXLabel.stringValue = [NSString stringWithFormat:@"Mouse X: %.6Lf", mouseReal];
+    self.mouseYLabel.stringValue = [NSString stringWithFormat:@"Mouse Y: %.6Lf", mouseImag];
 }
 
 -(void)mouseDown:(NSEvent *)event
@@ -183,9 +227,9 @@
         // Check if this was just a click (small movement) vs actual panning
         CGFloat dragDistance = sqrt(pow(mouseUpLoc.x - mouseDownLoc.x, 2) + pow(mouseUpLoc.y - mouseDownLoc.y, 2));
         if (dragDistance < 5) {
-            // Check for control-click (zoom out) vs regular click (zoom in)
-            if ([event modifierFlags] & NSEventModifierFlagControl) {
-                // Control-click - zoom out 2x at the clicked point
+            // Check for command-click (zoom out) vs regular click (zoom in)
+            if ([event modifierFlags] & NSEventModifierFlagCommand) {
+                // Command-click - zoom out 2x at the clicked point
                 [self performSingleClickZoomOutAtPoint:mouseDownLoc];
             } else {
                 // Regular click - zoom in 2x at the clicked point
@@ -293,6 +337,12 @@
 }
 
 - (void)frameDidChange:(NSNotification *)notification {
+    // Update tracking areas when frame changes
+    if (self.trackingAreas.count > 0) {
+        [self removeTrackingArea:self.trackingAreas.firstObject];
+    }
+    [self setupMouseTracking];
+    
     [self layoutImageView];
 }
 
@@ -362,7 +412,7 @@
     
     NSRect containerBounds = self.bounds;
     CGFloat infoPanelWidth = 230;
-    CGFloat infoPanelHeight = 120;
+    CGFloat infoPanelHeight = 160; // Increased height for mouse coordinates
     
     // Position panel on the right side with margin
     NSRect panelFrame = NSMakeRect(
@@ -377,10 +427,13 @@
     // Position labels within the panel
     CGFloat labelHeight = 20;
     CGFloat margin = 10;
+    CGFloat spacing = 5;
     
     self.xRangeLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - labelHeight, infoPanelWidth - 2*margin, labelHeight);
-    self.yRangeLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 2*labelHeight - 5, infoPanelWidth - 2*margin, labelHeight);
-    self.magnificationLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 3*labelHeight - 10, infoPanelWidth - 2*margin, labelHeight);
+    self.yRangeLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 2*labelHeight - spacing, infoPanelWidth - 2*margin, labelHeight);
+    self.magnificationLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 3*labelHeight - 2*spacing, infoPanelWidth - 2*margin, labelHeight);
+    self.mouseXLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 4*labelHeight - 3*spacing, infoPanelWidth - 2*margin, labelHeight);
+    self.mouseYLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 5*labelHeight - 4*spacing, infoPanelWidth - 2*margin, labelHeight);
 }
 
 - (void)positionRenderTimeLabel {
@@ -476,10 +529,30 @@
         self.magnificationLabel.textColor = [NSColor blackColor];
         self.magnificationLabel.alignment = NSTextAlignmentLeft;
         
+        self.mouseXLabel = [[NSTextField alloc] init];
+        self.mouseXLabel.editable = NO;
+        self.mouseXLabel.bezeled = NO;
+        self.mouseXLabel.drawsBackground = NO;
+        self.mouseXLabel.font = [NSFont monospacedSystemFontOfSize:11.0 weight:NSFontWeightRegular];
+        self.mouseXLabel.textColor = [NSColor darkGrayColor];
+        self.mouseXLabel.alignment = NSTextAlignmentLeft;
+        self.mouseXLabel.stringValue = @"Mouse X: --";
+        
+        self.mouseYLabel = [[NSTextField alloc] init];
+        self.mouseYLabel.editable = NO;
+        self.mouseYLabel.bezeled = NO;
+        self.mouseYLabel.drawsBackground = NO;
+        self.mouseYLabel.font = [NSFont monospacedSystemFontOfSize:11.0 weight:NSFontWeightRegular];
+        self.mouseYLabel.textColor = [NSColor darkGrayColor];
+        self.mouseYLabel.alignment = NSTextAlignmentLeft;
+        self.mouseYLabel.stringValue = @"Mouse Y: --";
+        
         // Add labels to panel
         [self.infoPanel addSubview:self.xRangeLabel];
         [self.infoPanel addSubview:self.yRangeLabel];
         [self.infoPanel addSubview:self.magnificationLabel];
+        [self.infoPanel addSubview:self.mouseXLabel];
+        [self.infoPanel addSubview:self.mouseYLabel];
         
         // Add panel to view
         [self addSubview:self.infoPanel];
@@ -491,6 +564,16 @@
     self.selectionOverlayView = [[SelectionRectangleView alloc] initWithFrame:self.bounds];
     self.selectionOverlayView.shouldDrawRectangle = NO;
     [self addSubview:self.selectionOverlayView];
+}
+
+- (void)setupMouseTracking {
+    // Create a tracking area for the entire view
+    NSTrackingArea *trackingArea = [[NSTrackingArea alloc] 
+        initWithRect:self.bounds
+        options:(NSTrackingMouseMoved | NSTrackingActiveInKeyWindow)
+        owner:self
+        userInfo:nil];
+    [self addTrackingArea:trackingArea];
 }
 
 - (void)performPanningWithCurrentLoc:(NSPoint)currentLoc {
@@ -574,7 +657,7 @@
 }
 
 - (void)performSingleClickZoomOutAtPoint:(NSPoint)clickPoint {
-    NSLog(@"Single click zoom out at point (%f, %f)", clickPoint.x, clickPoint.y);
+    NSLog(@"Command-click zoom out at point (%f, %f)", clickPoint.x, clickPoint.y);
     
     // Convert click point to complex plane coordinates
     NSSize imageSize = self.imageView.bounds.size;

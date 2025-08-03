@@ -6,6 +6,8 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Metal/Metal.h>
+#import <simd/simd.h>
 #import "MandelRenderer.h"
 
 #include <complex.h>
@@ -43,8 +45,55 @@
         data = NULL;
         currentWidth = 0;
         currentHeight = 0;
+        
+        // Initialize Metal for GPU acceleration
+        [self setupMetal];
     }
     return self;
+}
+
+- (void)setupMetal {
+    // Get the default Metal device (M1 Max GPU)
+    self.metalDevice = MTLCreateSystemDefaultDevice();
+    
+    if (self.metalDevice) {
+        self.commandQueue = [self.metalDevice newCommandQueue];
+        [self setupComputePipeline];
+        self.useGPUAcceleration = YES;
+        NSLog(@"Metal GPU acceleration enabled on: %@", self.metalDevice.name);
+    } else {
+        self.useGPUAcceleration = NO;
+        NSLog(@"Metal GPU acceleration not available, falling back to CPU");
+    }
+}
+
+- (void)setupComputePipeline {
+    NSError *error = nil;
+    
+    // Load the Metal shader library
+    id<MTLLibrary> library = [self.metalDevice newDefaultLibrary];
+    if (!library) {
+        NSLog(@"Failed to load Metal shader library");
+        self.useGPUAcceleration = NO;
+        return;
+    }
+    
+    // Get the compute function
+    id<MTLFunction> mandelbrotFunction = [library newFunctionWithName:@"mandelbrotKernel"];
+    if (!mandelbrotFunction) {
+        NSLog(@"Failed to load mandelbrotKernel function");
+        self.useGPUAcceleration = NO;
+        return;
+    }
+    
+    // Create compute pipeline state
+    self.computePipeline = [self.metalDevice newComputePipelineStateWithFunction:mandelbrotFunction 
+                                                                           error:&error];
+    if (!self.computePipeline) {
+        NSLog(@"Failed to create compute pipeline: %@", error.localizedDescription);
+        self.useGPUAcceleration = NO;
+        return;
+    }
 }
 
 -(double) setupWithWidth:(int)width height:(int)height {
@@ -66,16 +115,84 @@
     clock_t start, end;
     start = clock();
     
+    // Use GPU acceleration if available, otherwise fall back to CPU
+    if (self.useGPUAcceleration && self.computePipeline) {
+        [self renderWithMetalGPU:width height:height];
+    } else {
+        [self renderWithCPU:width height:height];
+    }
+    
+    end = clock();
+    double renderTime = (double)(end - start)/CLOCKS_PER_SEC;
+    printf("Render (%s) took %f seconds\n", 
+           self.useGPUAcceleration ? "GPU" : "CPU", renderTime);
+    return renderTime;
+}
+
+- (void)renderWithMetalGPU:(int)width height:(int)height {
+    // Metal parameters structure
+    struct {
+        simd_float2 bottomLeft;
+        simd_float2 topRight;
+        uint32_t width;
+        uint32_t height;
+        uint32_t maxIterations;
+        float escapeRadius;
+    } params;
+    
+    params.bottomLeft = simd_make_float2((float)creall(self.bottomLeft), (float)cimagl(self.bottomLeft));
+    params.topRight = simd_make_float2((float)creall(self.topRight), (float)cimagl(self.topRight));
+    params.width = width;
+    params.height = height;
+    params.maxIterations = 500;
+    params.escapeRadius = 2.0f;
+    
+    // Create Metal buffers
+    size_t outputBufferSize = width * height * sizeof(struct pixel);
+    id<MTLBuffer> outputBuffer = [self.metalDevice newBufferWithBytes:data
+                                                               length:outputBufferSize
+                                                              options:MTLResourceStorageModeShared];
+    
+    id<MTLBuffer> paramsBuffer = [self.metalDevice newBufferWithBytes:&params
+                                                               length:sizeof(params)
+                                                              options:MTLResourceStorageModeShared];
+    
+    // Create command buffer and encoder
+    id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
+    id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+    
+    // Set up compute pass
+    [encoder setComputePipelineState:self.computePipeline];
+    [encoder setBuffer:outputBuffer offset:0 atIndex:0];
+    [encoder setBuffer:paramsBuffer offset:0 atIndex:1];
+    
+    // Calculate optimal thread group size for M1 Max
+    MTLSize threadgroupSize = MTLSizeMake(32, 32, 1);  // 1024 threads per group
+    MTLSize gridSize = MTLSizeMake(width, height, 1);
+    
+    // Dispatch compute threads
+    [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    [encoder endEncoding];
+    
+    // Execute and wait for completion
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+    
+    // Copy results back to CPU memory
+    memcpy(data, outputBuffer.contents, outputBufferSize);
+}
+
+- (void)renderWithCPU:(int)width height:(int)height {
     complex long double bl_coord = self.bottomLeft;
     complex long double tr_coord = self.topRight;
 
     long double stepX = fabsl(creal(tr_coord) - creal(bl_coord)) / (long double)width;
     long double stepY = fabsl(cimag(tr_coord) - cimag(bl_coord)) / (long double)height;
     
-    const long double ESCAPE_RADIUS_SQUARED = 256.0L;
+    const long double ESCAPE_RADIUS_SQUARED = 4.0L;  // Standard escape radius^2
     int MAXITERATIONS = 500;
 
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
     dispatch_apply(height, queue, ^(size_t yDataPos_idx) {
         int yDataPos = (int)yDataPos_idx;
@@ -86,19 +203,37 @@
             
             complex long double c = x0 + y0 * I;
             complex long double z = 0.0L + 0.0L * I;
-
+            
             int iteration = 0;
             long double modulus_squared = 0.0L;
             
-            while (iteration < MAXITERATIONS) {
+            // Early bailout: check main cardioid and period-2 bulb
+            long double c_re = creal(c);
+            long double c_im = cimag(c);
+            
+            // Main cardioid check
+            long double q = (c_re - 0.25L) * (c_re - 0.25L) + c_im * c_im;
+            if (q * (q + (c_re - 0.25L)) < 0.25L * c_im * c_im) {
+                // Point is in main cardioid, definitely in set
+                iteration = MAXITERATIONS;
+            } else if ((c_re + 1.0L) * (c_re + 1.0L) + c_im * c_im < 0.0625L) {
+                // Point is in period-2 bulb, definitely in set
+                iteration = MAXITERATIONS;
+            } else {
+                
+                while (iteration < MAXITERATIONS) {
                 long double z_re = creal(z);
                 long double z_im = cimag(z);
-                modulus_squared = z_re * z_re + z_im * z_im;
+                long double z_re_sq = z_re * z_re;
+                long double z_im_sq = z_im * z_im;
+                modulus_squared = z_re_sq + z_im_sq;
                 if (modulus_squared > ESCAPE_RADIUS_SQUARED) {
                     break;
                 }
-                z = (z_re * z_re - z_im * z_im + creal(c)) + (2.0L * z_re * z_im + cimag(c)) * I;
+                // Reuse pre-calculated squares
+                z = (z_re_sq - z_im_sq + creal(c)) + (2.0L * z_re * z_im + cimag(c)) * I;
                 iteration++;
+                }
             }
             
             struct pixel pxl;
@@ -109,31 +244,36 @@
                 pxl.gChannel = 0;
                 pxl.bChannel = 0;
             } else {
-                // Classic Mandelbrot coloring: white near boundary, transitioning to deep blue
+                // Classic Mandelbrot coloring with prominent white boundary
                 long double smooth_iteration = iteration + 1.0L - log2l(0.5L * log2l(modulus_squared));
                 
-                // Scale for color mapping
-                long double t = smooth_iteration / 50.0L;
+                // Scale for color mapping - use smaller divisor for more prominent white band
+                long double t = smooth_iteration / 20.0L;
                 t = fminl(t, 1.0L);
                 
-                if (t < 0.2L) {
-                    // Very close to boundary - bright white/yellow
-                    long double factor = t / 0.2L; // 0 to 1
-                    pxl.rChannel = (UInt8)(255.0L - factor * 55.0L);  // 255 to 200
-                    pxl.gChannel = (UInt8)(255.0L - factor * 55.0L);  // 255 to 200  
-                    pxl.bChannel = (UInt8)(255.0L - factor * 100.0L); // 255 to 155
-                } else if (t < 0.5L) {
-                    // Light blue transition zone
-                    long double factor = (t - 0.2L) / 0.3L; // 0 to 1
-                    pxl.rChannel = (UInt8)(200.0L - factor * 150.0L); // 200 to 50
-                    pxl.gChannel = (UInt8)(200.0L - factor * 120.0L); // 200 to 80
-                    pxl.bChannel = (UInt8)(155.0L + factor * 100.0L); // 155 to 255
+                if (t < 0.15L) {
+                    // Very close to boundary - bright white
+                    pxl.rChannel = 255;
+                    pxl.gChannel = 255;
+                    pxl.bChannel = 255;
+                } else if (t < 0.3L) {
+                    // White to light blue transition
+                    long double factor = (t - 0.15L) / 0.15L; // 0 to 1
+                    pxl.rChannel = (UInt8)(255.0L - factor * 155.0L); // 255 to 100
+                    pxl.gChannel = (UInt8)(255.0L - factor * 155.0L); // 255 to 100
+                    pxl.bChannel = 255; // Keep blue at max
+                } else if (t < 0.6L) {
+                    // Light blue to medium blue
+                    long double factor = (t - 0.3L) / 0.3L; // 0 to 1
+                    pxl.rChannel = (UInt8)(100.0L - factor * 80.0L);  // 100 to 20
+                    pxl.gChannel = (UInt8)(100.0L - factor * 70.0L);  // 100 to 30
+                    pxl.bChannel = 255; // Keep blue at max
                 } else {
-                    // Deep blue range
-                    long double factor = (t - 0.5L) / 0.5L; // 0 to 1
-                    pxl.rChannel = (UInt8)(50.0L - factor * 50.0L);   // 50 to 0
-                    pxl.gChannel = (UInt8)(80.0L - factor * 80.0L);   // 80 to 0
-                    pxl.bChannel = (UInt8)(255.0L - factor * 155.0L); // 255 to 100
+                    // Medium blue to dark blue
+                    long double factor = (t - 0.6L) / 0.4L; // 0 to 1
+                    pxl.rChannel = (UInt8)(20.0L - factor * 20.0L);   // 20 to 0
+                    pxl.gChannel = (UInt8)(30.0L - factor * 30.0L);   // 30 to 0
+                    pxl.bChannel = (UInt8)(255.0L - factor * 100.0L); // 255 to 155
                 }
             }
             
@@ -141,11 +281,6 @@
             data[yDataPos * width + xDataPos] = pxl;
         }
     });
-
-    end = clock();
-    double renderTime = (double)(end - start)/CLOCKS_PER_SEC;
-    printf("Color calculation took %f seconds\n", renderTime);
-    return renderTime;
 }
 
 -(NSImage*) render {

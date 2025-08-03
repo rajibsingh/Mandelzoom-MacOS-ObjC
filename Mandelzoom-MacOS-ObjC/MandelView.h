@@ -20,6 +20,8 @@
     @property (strong) NSTextField *xRangeLabel;
     @property (strong) NSTextField *yRangeLabel;
     @property (strong) NSTextField *magnificationLabel;
+    @property (strong) NSTextField *mouseXLabel;
+    @property (strong) NSTextField *mouseYLabel;
 
 -(void) setImage;
 -(void) refresh;
