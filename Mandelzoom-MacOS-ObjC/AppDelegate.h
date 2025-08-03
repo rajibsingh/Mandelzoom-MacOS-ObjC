@@ -6,8 +6,10 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "AddBookmarkViewController.h"
+#import "OpenBookmarkViewController.h"
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, AddBookmarkViewControllerDelegate, OpenBookmarkViewControllerDelegate>
 
 @property (nonatomic, strong) NSString *saveLocation;
 @property (nonatomic, assign) NSInteger magnificationLevel;
@@ -18,6 +20,10 @@
 - (void)saveMagnificationLevelPreference;
 - (void)saveShowInfoPanelPreference;
 - (void)saveShowRenderTimePreference;
+
+// Bookmark methods
+- (IBAction)addBookmark:(id)sender;
+- (IBAction)openBookmark:(id)sender;
 
 @end
 

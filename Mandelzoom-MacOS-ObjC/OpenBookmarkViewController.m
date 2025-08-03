@@ -1,0 +1,223 @@
+//
+//  OpenBookmarkViewController.m
+//  Mandelzoom-MacOS-ObjC
+//
+
+#import "OpenBookmarkViewController.h"
+#import "BookmarkManager.h"
+
+@implementation OpenBookmarkViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self setupUI];
+    [self refreshBookmarks];
+}
+
+- (void)setupUI {
+    self.view.frame = NSMakeRect(0, 0, 700, 500);
+    
+    // Title label
+    NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 460, 200, 20)];
+    titleLabel.editable = NO;
+    titleLabel.bezeled = NO;
+    titleLabel.drawsBackground = NO;
+    titleLabel.stringValue = @"Saved Bookmarks";
+    titleLabel.font = [NSFont systemFontOfSize:16 weight:NSFontWeightSemibold];
+    [self.view addSubview:titleLabel];
+    
+    // Table view with scroll view
+    self.scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(20, 120, 660, 320)];
+    self.scrollView.hasVerticalScroller = YES;
+    self.scrollView.borderType = NSBezelBorder;
+    
+    self.tableView = [[NSTableView alloc] init];
+    self.tableView.dataSource = self;
+    self.tableView.delegate = self;
+    self.tableView.allowsMultipleSelection = NO;
+    self.tableView.rowSizeStyle = NSTableViewRowSizeStyleMedium;
+    
+    // Create columns
+    NSTableColumn *titleColumn = [[NSTableColumn alloc] initWithIdentifier:@"title"];
+    titleColumn.title = @"Title";
+    titleColumn.width = 200;
+    titleColumn.minWidth = 150;
+    [self.tableView addTableColumn:titleColumn];
+    
+    NSTableColumn *magnificationColumn = [[NSTableColumn alloc] initWithIdentifier:@"magnification"];
+    magnificationColumn.title = @"Magnification";
+    magnificationColumn.width = 120;
+    magnificationColumn.minWidth = 100;
+    [self.tableView addTableColumn:magnificationColumn];
+    
+    NSTableColumn *coordinatesColumn = [[NSTableColumn alloc] initWithIdentifier:@"coordinates"];
+    coordinatesColumn.title = @"Coordinates";
+    coordinatesColumn.width = 250;
+    coordinatesColumn.minWidth = 200;
+    [self.tableView addTableColumn:coordinatesColumn];
+    
+    NSTableColumn *dateColumn = [[NSTableColumn alloc] initWithIdentifier:@"date"];
+    dateColumn.title = @"Date Created";
+    dateColumn.width = 140;
+    dateColumn.minWidth = 120;
+    [self.tableView addTableColumn:dateColumn];
+    
+    self.scrollView.documentView = self.tableView;
+    [self.view addSubview:self.scrollView];
+    
+    // Details label
+    self.detailsLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 70, 660, 40)];
+    self.detailsLabel.editable = NO;
+    self.detailsLabel.bezeled = NO;
+    self.detailsLabel.drawsBackground = NO;
+    self.detailsLabel.font = [NSFont systemFontOfSize:12];
+    self.detailsLabel.textColor = [NSColor secondaryLabelColor];
+    self.detailsLabel.stringValue = @"Select a bookmark to view details";
+    self.detailsLabel.maximumNumberOfLines = 2;
+    self.detailsLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    [self.view addSubview:self.detailsLabel];
+    
+    // Buttons
+    self.cancelButton = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancel:)];
+    self.cancelButton.frame = NSMakeRect(460, 20, 80, 32);
+    [self.view addSubview:self.cancelButton];
+    
+    self.deleteButton = [NSButton buttonWithTitle:@"Delete" target:self action:@selector(deleteBookmark:)];
+    self.deleteButton.frame = NSMakeRect(550, 20, 80, 32);
+    self.deleteButton.enabled = NO;
+    [self.view addSubview:self.deleteButton];
+    
+    self.openButton = [NSButton buttonWithTitle:@"Open" target:self action:@selector(openBookmark:)];
+    self.openButton.frame = NSMakeRect(640, 20, 80, 32);
+    self.openButton.keyEquivalent = @"\r"; // Enter key
+    self.openButton.enabled = NO;
+    [self.view addSubview:self.openButton];
+}
+
+- (void)refreshBookmarks {
+    self.bookmarks = [[BookmarkManager sharedManager] getAllBookmarks];
+    [self.tableView reloadData];
+    
+    if (self.bookmarks.count == 0) {
+        self.detailsLabel.stringValue = @"No bookmarks saved yet";
+    }
+}
+
+#pragma mark - NSTableViewDataSource
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
+    return self.bookmarks.count;
+}
+
+#pragma mark - NSTableViewDelegate
+
+- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+    if (row >= self.bookmarks.count) return nil;
+    
+    MandelbrotBookmark *bookmark = self.bookmarks[row];
+    NSString *identifier = tableColumn.identifier;
+    
+    NSTableCellView *cellView = [tableView makeViewWithIdentifier:identifier owner:self];
+    
+    if (!cellView) {
+        cellView = [[NSTableCellView alloc] init];
+        cellView.identifier = identifier;
+        
+        NSTextField *textField = [[NSTextField alloc] init];
+        textField.editable = NO;
+        textField.bordered = NO;
+        textField.backgroundColor = [NSColor clearColor];
+        textField.font = [NSFont systemFontOfSize:13];
+        
+        cellView.textField = textField;
+        [cellView addSubview:textField];
+        
+        textField.translatesAutoresizingMaskIntoConstraints = NO;
+        [NSLayoutConstraint activateConstraints:@[
+            [textField.leadingAnchor constraintEqualToAnchor:cellView.leadingAnchor constant:4],
+            [textField.trailingAnchor constraintEqualToAnchor:cellView.trailingAnchor constant:-4],
+            [textField.centerYAnchor constraintEqualToAnchor:cellView.centerYAnchor]
+        ]];
+    }
+    
+    if ([identifier isEqualToString:@"title"]) {
+        cellView.textField.stringValue = bookmark.title;
+    } else if ([identifier isEqualToString:@"magnification"]) {
+        double mag = bookmark.magnification;
+        if (mag >= 1000000) {
+            cellView.textField.stringValue = [NSString stringWithFormat:@"%.2fM×", mag / 1000000.0];
+        } else if (mag >= 1000) {
+            cellView.textField.stringValue = [NSString stringWithFormat:@"%.2fK×", mag / 1000.0];
+        } else {
+            cellView.textField.stringValue = [NSString stringWithFormat:@"%.2f×", mag];
+        }
+    } else if ([identifier isEqualToString:@"coordinates"]) {
+        cellView.textField.stringValue = [NSString stringWithFormat:@"(%.3f, %.3f) to (%.3f, %.3f)", 
+                                         bookmark.xMin, bookmark.yMin, bookmark.xMax, bookmark.yMax];
+        cellView.textField.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
+    } else if ([identifier isEqualToString:@"date"]) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        formatter.dateStyle = NSDateFormatterMediumStyle;
+        formatter.timeStyle = NSDateFormatterShortStyle;
+        cellView.textField.stringValue = [formatter stringFromDate:bookmark.dateCreated];
+    }
+    
+    return cellView;
+}
+
+- (void)tableViewSelectionDidChange:(NSNotification *)notification {
+    NSInteger selectedRow = self.tableView.selectedRow;
+    BOOL hasSelection = selectedRow >= 0 && selectedRow < self.bookmarks.count;
+    
+    self.openButton.enabled = hasSelection;
+    self.deleteButton.enabled = hasSelection;
+    
+    if (hasSelection) {
+        MandelbrotBookmark *bookmark = self.bookmarks[selectedRow];
+        self.detailsLabel.stringValue = [NSString stringWithFormat:@"Description: %@", 
+                                        bookmark.bookmarkDescription.length > 0 ? bookmark.bookmarkDescription : @"No description"];
+    } else {
+        self.detailsLabel.stringValue = @"Select a bookmark to view details";
+    }
+}
+
+#pragma mark - Actions
+
+- (IBAction)openBookmark:(id)sender {
+    NSInteger selectedRow = self.tableView.selectedRow;
+    if (selectedRow >= 0 && selectedRow < self.bookmarks.count) {
+        MandelbrotBookmark *bookmark = self.bookmarks[selectedRow];
+        
+        if ([self.delegate respondsToSelector:@selector(openBookmarkViewController:didOpenBookmark:)]) {
+            [self.delegate openBookmarkViewController:self didOpenBookmark:bookmark];
+        }
+    }
+}
+
+- (IBAction)deleteBookmark:(id)sender {
+    NSInteger selectedRow = self.tableView.selectedRow;
+    if (selectedRow >= 0 && selectedRow < self.bookmarks.count) {
+        MandelbrotBookmark *bookmark = self.bookmarks[selectedRow];
+        
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.messageText = @"Delete Bookmark";
+        alert.informativeText = [NSString stringWithFormat:@"Are you sure you want to delete the bookmark \"%@\"?", bookmark.title];
+        alert.alertStyle = NSAlertStyleWarning;
+        [alert addButtonWithTitle:@"Delete"];
+        [alert addButtonWithTitle:@"Cancel"];
+        
+        NSModalResponse response = [alert runModal];
+        if (response == NSAlertFirstButtonReturn) {
+            [[BookmarkManager sharedManager] removeBookmark:bookmark];
+            [self refreshBookmarks];
+        }
+    }
+}
+
+- (IBAction)cancel:(id)sender {
+    if ([self.delegate respondsToSelector:@selector(openBookmarkViewControllerDidCancel:)]) {
+        [self.delegate openBookmarkViewControllerDidCancel:self];
+    }
+}
+
+@end

@@ -9,10 +9,14 @@
 #import "ViewController.h"
 #import "MandelView.h"
 #import "SettingsWindowController.h"
+#import "BookmarkManager.h"
+#import "MandelbrotBookmark.h"
 
 @interface AppDelegate ()
 
 @property (nonatomic, strong) SettingsWindowController *settingsWindowController;
+@property (nonatomic, strong) NSWindowController *addBookmarkWindowController;
+@property (nonatomic, strong) NSWindowController *openBookmarkWindowController;
 
 @end
 
@@ -132,6 +136,30 @@
     [fileMenuItem setSubmenu:fileMenu];
     [mainMenu addItem:fileMenuItem];
     
+    // Create Bookmarks menu
+    NSMenuItem *bookmarksMenuItem = [[NSMenuItem alloc] init];
+    bookmarksMenuItem.title = @"Bookmarks";
+    
+    NSMenu *bookmarksMenu = [[NSMenu alloc] initWithTitle:@"Bookmarks"];
+    
+    // Add Bookmark menu item
+    NSMenuItem *addBookmarkItem = [[NSMenuItem alloc] initWithTitle:@"Add Bookmark..." 
+                                                             action:@selector(addBookmark:) 
+                                                      keyEquivalent:@"b"];
+    addBookmarkItem.target = self;
+    [bookmarksMenu addItem:addBookmarkItem];
+    
+    // Open Bookmark menu item
+    NSMenuItem *openBookmarkItem = [[NSMenuItem alloc] initWithTitle:@"Open Bookmark..." 
+                                                              action:@selector(openBookmark:) 
+                                                       keyEquivalent:@"o"];
+    openBookmarkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+    openBookmarkItem.target = self;
+    [bookmarksMenu addItem:openBookmarkItem];
+    
+    [bookmarksMenuItem setSubmenu:bookmarksMenu];
+    [mainMenu addItem:bookmarksMenuItem];
+    
     [NSApp setMainMenu:mainMenu];
 }
 
@@ -200,5 +228,123 @@
     // Insert code here to tear down your application
 }
 
+#pragma mark - Bookmark Actions
+
+- (IBAction)addBookmark:(id)sender {
+    // Get the current window and find the MandelView
+    NSWindow *keyWindow = [NSApp keyWindow];
+    if (!keyWindow) return;
+    
+    ViewController *viewController = (ViewController *)keyWindow.contentViewController;
+    if (!viewController || ![viewController isKindOfClass:[ViewController class]]) return;
+    
+    MandelView *mandelView = viewController.mandelView;
+    if (!mandelView) return;
+    
+    // Get current coordinates from the MandelView's renderer
+    MandelRenderer *renderer = [mandelView valueForKey:@"renderer"];
+    if (!renderer) return;
+    
+    complex long double bottomLeft = renderer.bottomLeft;
+    complex long double topRight = renderer.topRight;
+    
+    // Create and show the Add Bookmark window
+    AddBookmarkViewController *addBookmarkVC = [[AddBookmarkViewController alloc] init];
+    addBookmarkVC.delegate = self;
+    addBookmarkVC.xMin = creall(bottomLeft);
+    addBookmarkVC.xMax = creall(topRight);
+    addBookmarkVC.yMin = cimagl(bottomLeft);
+    addBookmarkVC.yMax = cimagl(topRight);
+    
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:addBookmarkVC.view.frame
+                                                   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    window.title = @"Add Bookmark";
+    window.contentViewController = addBookmarkVC;
+    [window center];
+    
+    self.addBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
+    [self.addBookmarkWindowController.window makeKeyAndOrderFront:self];
+}
+
+- (IBAction)openBookmark:(id)sender {
+    OpenBookmarkViewController *openBookmarkVC = [[OpenBookmarkViewController alloc] init];
+    openBookmarkVC.delegate = self;
+    
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:openBookmarkVC.view.frame
+                                                   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    window.title = @"Open Bookmark";
+    window.contentViewController = openBookmarkVC;
+    [window center];
+    
+    self.openBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
+    [self.openBookmarkWindowController.window makeKeyAndOrderFront:self];
+}
+
+#pragma mark - AddBookmarkViewControllerDelegate
+
+- (void)addBookmarkViewController:(AddBookmarkViewController *)controller didAddBookmark:(MandelbrotBookmark *)bookmark {
+    [[BookmarkManager sharedManager] addBookmark:bookmark];
+    [self.addBookmarkWindowController.window close];
+    self.addBookmarkWindowController = nil;
+    
+    // Show success message
+    NSAlert *alert = [[NSAlert alloc] init];
+    alert.messageText = @"Bookmark Added";
+    alert.informativeText = [NSString stringWithFormat:@"Bookmark \"%@\" has been saved successfully.", bookmark.title];
+    alert.alertStyle = NSAlertStyleInformational;
+    [alert runModal];
+}
+
+- (void)addBookmarkViewControllerDidCancel:(AddBookmarkViewController *)controller {
+    [self.addBookmarkWindowController.window close];
+    self.addBookmarkWindowController = nil;
+}
+
+#pragma mark - OpenBookmarkViewControllerDelegate
+
+- (void)openBookmarkViewController:(OpenBookmarkViewController *)controller didOpenBookmark:(MandelbrotBookmark *)bookmark {
+    [self.openBookmarkWindowController.window close];
+    self.openBookmarkWindowController = nil;
+    
+    // Navigate to the bookmark coordinates
+    [self navigateToBookmark:bookmark];
+}
+
+- (void)openBookmarkViewControllerDidCancel:(OpenBookmarkViewController *)controller {
+    [self.openBookmarkWindowController.window close];
+    self.openBookmarkWindowController = nil;
+}
+
+- (void)navigateToBookmark:(MandelbrotBookmark *)bookmark {
+    // Get the current window and find the MandelView
+    NSWindow *keyWindow = [NSApp keyWindow];
+    if (!keyWindow) return;
+    
+    ViewController *viewController = (ViewController *)keyWindow.contentViewController;
+    if (!viewController || ![viewController isKindOfClass:[ViewController class]]) return;
+    
+    MandelView *mandelView = viewController.mandelView;
+    if (!mandelView) return;
+    
+    // Get the renderer and set new coordinates
+    MandelRenderer *renderer = [mandelView valueForKey:@"renderer"];
+    if (!renderer) return;
+    
+    // Set the new coordinates
+    complex long double newBottomLeft = bookmark.xMin + bookmark.yMin * I;
+    complex long double newTopRight = bookmark.xMax + bookmark.yMax * I;
+    
+    renderer.bottomLeft = newBottomLeft;
+    renderer.topRight = newTopRight;
+    
+    // Trigger a re-render
+    [mandelView setImage];
+    
+    NSLog(@"Navigated to bookmark: %@", bookmark.title);
+}
 
 @end

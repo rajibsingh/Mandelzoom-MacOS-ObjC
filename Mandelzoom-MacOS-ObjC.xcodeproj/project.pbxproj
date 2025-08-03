@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		08B6B70999184186AA863FB5 /* MandelbrotBookmark.m in Sources */ = {isa = PBXBuildFile; fileRef = DCCC2DE1492545A896B16DAD /* MandelbrotBookmark.m */; };
+		AD5A1F1C7A4A41DBB1952570 /* BookmarkManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 555899BF99564FA58F37DAC5 /* BookmarkManager.m */; };
+		6641682BC5054445AFDB82D4 /* AddBookmarkViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A2A918F97E54340BBA2C8ED /* AddBookmarkViewController.m */; };
+		C0B0FC41B26B4F7A84192B8B /* OpenBookmarkViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 033A22E3D5BF44B1B936EB12 /* OpenBookmarkViewController.m */; };
+		37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 406E716DDD4740F3BD03 /* SelectionRectangleView.m */; };
 		350E5F072690EFB200967E1D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F062690EFB200967E1D /* AppDelegate.m */; };
 		350E5F0A2690EFB200967E1D /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F092690EFB200967E1D /* ViewController.m */; };
 		350E5F0C2690EFB500967E1D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 350E5F0B2690EFB500967E1D /* Assets.xcassets */; };
@@ -14,12 +19,21 @@
 		350E5F122690EFB500967E1D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F112690EFB500967E1D /* main.m */; };
 		350E5F1B2691E91700967E1D /* MandelView.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F1A2691E91700967E1D /* MandelView.m */; };
 		3535619E269258B200180B5D /* MandelRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3535619D269258B200180B5D /* MandelRenderer.m */; };
-		37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 406E716DDD4740F3BD03 /* SelectionRectangleView.m */; };
 		58A1EBFD2A7C3E5A00462D4E /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 58A1EBFC2A7C3E5A00462D4E /* SettingsViewController.m */; };
 		58A1EC012A7C3E5A00462D4E /* SettingsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 58A1EC002A7C3E5A00462D4E /* SettingsWindowController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		EDFF46A5A5B943959DE5E8A4 /* MandelbrotBookmark.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelbrotBookmark.h; sourceTree = "<group>"; };
+		DCCC2DE1492545A896B16DAD /* MandelbrotBookmark.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MandelbrotBookmark.m; sourceTree = "<group>"; };
+		95720088A6AE40CBBE615DF9 /* BookmarkManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BookmarkManager.h; sourceTree = "<group>"; };
+		555899BF99564FA58F37DAC5 /* BookmarkManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BookmarkManager.m; sourceTree = "<group>"; };
+		0A1CE82C1A0A4A9E90508AFE /* AddBookmarkViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddBookmarkViewController.h; sourceTree = "<group>"; };
+		1A2A918F97E54340BBA2C8ED /* AddBookmarkViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddBookmarkViewController.m; sourceTree = "<group>"; };
+		9F4DE1EE1155408894A610B4 /* OpenBookmarkViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenBookmarkViewController.h; sourceTree = "<group>"; };
+		033A22E3D5BF44B1B936EB12 /* OpenBookmarkViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OpenBookmarkViewController.m; sourceTree = "<group>"; };
+		406E716DDD4740F3BD03 /* SelectionRectangleView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SelectionRectangleView.m; sourceTree = "<group>"; };
+		C257D9999E5D48A58957 /* SelectionRectangleView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SelectionRectangleView.h; sourceTree = "<group>"; };
 		350E5F022690EFB200967E1D /* Mandelzoom-MacOS-ObjC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mandelzoom-MacOS-ObjC.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		350E5F052690EFB200967E1D /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		350E5F062690EFB200967E1D /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -34,8 +48,6 @@
 		350E5F1F269213ED00967E1D /* MandelView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelView.h; sourceTree = "<group>"; };
 		3535619C2692589A00180B5D /* MandelRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MandelRenderer.h; sourceTree = "<group>"; };
 		3535619D269258B200180B5D /* MandelRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MandelRenderer.m; sourceTree = "<group>"; };
-		C257D9999E5D48A58957 /* SelectionRectangleView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SelectionRectangleView.h; sourceTree = "<group>"; };
-		406E716DDD4740F3BD03 /* SelectionRectangleView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SelectionRectangleView.m; sourceTree = "<group>"; };
 		58A1EBFB2A7C3E5A00462D4E /* SettingsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		58A1EBFC2A7C3E5A00462D4E /* SettingsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
 		58A1EBFF2A7C3E5A00462D4E /* SettingsWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsWindowController.h; sourceTree = "<group>"; };
@@ -91,6 +103,14 @@
 				58A1EBFC2A7C3E5A00462D4E /* SettingsViewController.m */,
 				58A1EBFF2A7C3E5A00462D4E /* SettingsWindowController.h */,
 				58A1EC002A7C3E5A00462D4E /* SettingsWindowController.m */,
+				EDFF46A5A5B943959DE5E8A4 /* MandelbrotBookmark.h */,
+				DCCC2DE1492545A896B16DAD /* MandelbrotBookmark.m */,
+				95720088A6AE40CBBE615DF9 /* BookmarkManager.h */,
+				555899BF99564FA58F37DAC5 /* BookmarkManager.m */,
+				0A1CE82C1A0A4A9E90508AFE /* AddBookmarkViewController.h */,
+				1A2A918F97E54340BBA2C8ED /* AddBookmarkViewController.m */,
+				9F4DE1EE1155408894A610B4 /* OpenBookmarkViewController.h */,
+				033A22E3D5BF44B1B936EB12 /* OpenBookmarkViewController.m */,
 			);
 			path = "Mandelzoom-MacOS-ObjC";
 			sourceTree = "<group>";
@@ -171,6 +191,10 @@
 				37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */,
 				58A1EBFD2A7C3E5A00462D4E /* SettingsViewController.m in Sources */,
 				58A1EC012A7C3E5A00462D4E /* SettingsWindowController.m in Sources */,
+				08B6B70999184186AA863FB5 /* MandelbrotBookmark.m in Sources */,
+				AD5A1F1C7A4A41DBB1952570 /* BookmarkManager.m in Sources */,
+				6641682BC5054445AFDB82D4 /* AddBookmarkViewController.m in Sources */,
+				C0B0FC41B26B4F7A84192B8B /* OpenBookmarkViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
