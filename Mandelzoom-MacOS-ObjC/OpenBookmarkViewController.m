@@ -13,10 +13,8 @@
     [super viewDidLoad];
     NSLog(@"About to call setupUI");
     [self setupUI];
-    NSLog(@"setupUI completed, about to load bookmarks directly");
-    // Load bookmarks directly without calling refreshBookmarks to avoid hanging
-    self.bookmarks = [[BookmarkManager sharedManager] getAllBookmarks];
-    NSLog(@"Loaded %lu bookmarks directly", (unsigned long)self.bookmarks.count);
+    NSLog(@"setupUI completed, about to refresh bookmarks");
+    [self refreshBookmarks];
     NSLog(@"viewDidLoad completed");
 }
 

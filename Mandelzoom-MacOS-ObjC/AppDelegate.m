@@ -297,6 +297,7 @@
                                                        defer:NO];
     window.title = @"Add Bookmark";
     window.contentViewController = addBookmarkVC;
+    window.delegate = self;
     [window center];
     
     self.addBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
@@ -779,6 +780,19 @@
 - (void)exportBookmarkViewControllerDidCancel:(ExportBookmarkViewController *)controller {
     [self.exportBookmarkWindowController.window close];
     self.exportBookmarkWindowController = nil;
+}
+
+#pragma mark - NSWindowDelegate
+
+- (void)windowWillClose:(NSNotification *)notification {
+    NSWindow *closedWindow = notification.object;
+    if (closedWindow == self.openBookmarkWindowController.window) {
+        self.openBookmarkWindowController = nil;
+    } else if (closedWindow == self.exportBookmarkWindowController.window) {
+        self.exportBookmarkWindowController = nil;
+    } else if (closedWindow == self.addBookmarkWindowController.window) {
+        self.addBookmarkWindowController = nil;
+    }
 }
 
 @end

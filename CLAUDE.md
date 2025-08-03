@@ -31,7 +31,7 @@ This is a macOS application written in Objective-C that generates and displays t
    - Render time display overlay
    - Escape key to reset to original view
 
-3. **SelectionRectangleView** (`SelectionRectangleView.h/m`): Overlay view that draws the selection rectangle during mouse drag operations for zoom selection.
+
 
 4. **ViewController** (`ViewController.h/m`): Main view controller that coordinates between the UI elements and the Mandelbrot view.
 

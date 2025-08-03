@@ -10,11 +10,10 @@
 #ifndef MandelView_h
 #define MandelView_h
 
-@class SelectionRectangleView;
+
 
 @interface MandelView : NSView
     @property (strong) IBOutlet NSImageView *imageView;
-    @property (strong) IBOutlet SelectionRectangleView *selectionOverlayView;
     @property (strong) NSTextField *renderTimeLabel;
     @property (strong) NSView *infoPanel;
     @property (strong) NSTextField *xRangeLabel;

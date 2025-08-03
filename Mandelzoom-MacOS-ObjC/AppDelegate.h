@@ -10,7 +10,7 @@
 #import "OpenBookmarkViewController.h"
 #import "ExportBookmarkViewController.h"
 
-@interface AppDelegate : NSObject <NSApplicationDelegate, AddBookmarkViewControllerDelegate, OpenBookmarkViewControllerDelegate, ExportBookmarkViewControllerDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, AddBookmarkViewControllerDelegate, OpenBookmarkViewControllerDelegate, ExportBookmarkViewControllerDelegate>
 
 @property (nonatomic, strong) NSString *saveLocation;
 @property (nonatomic, assign) NSInteger magnificationLevel;

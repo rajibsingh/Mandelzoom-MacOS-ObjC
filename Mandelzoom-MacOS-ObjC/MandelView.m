@@ -4,7 +4,6 @@
 #import "MandelView.h"
 #import "MandelRenderer.h"
 #import <math.h>
-#import "SelectionRectangleView.h"
 #import "AppDelegate.h"
 
 @implementation MandelView
@@ -25,9 +24,7 @@
         initialBottomLeft = renderer.bottomLeft;
         initialTopRight = renderer.topRight;
     }
-    if (self.selectionOverlayView) {
-        self.selectionOverlayView.shouldDrawRectangle = NO;
-    }
+ 
     
     // Ensure image view is set up for centering
     if (self.imageView) {
@@ -48,10 +45,6 @@
     // Set up info panel
     [self setupInfoPanel];
     
-    // Set up selection overlay view if not connected from storyboard
-    if (!self.selectionOverlayView) {
-        [self setupSelectionOverlayView];
-    }
     
     // Set up mouse tracking for real-time coordinates
     [self setupMouseTracking];
@@ -82,10 +75,6 @@
     [self updateRenderTimeDisplay:renderTime];
     [self updateInfoPanel];
     
-    if (self.selectionOverlayView) {
-        self.selectionOverlayView.shouldDrawRectangle = NO;
-        [self.selectionOverlayView setNeedsDisplay:YES];
-    }
 }
 
 -(void) refresh {
@@ -103,12 +92,7 @@
     _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
     [self updateRenderTimeDisplay:renderTime];
     [self updateInfoPanel];
-    
-    if (self.selectionOverlayView) {
-        self.selectionOverlayView.shouldDrawRectangle = NO;
-        [self.selectionOverlayView setNeedsDisplay:YES];
     }
-}
 
 - (BOOL)acceptsFirstResponder
 {
@@ -286,11 +270,7 @@
     // Update image view frame
     self.imageView.frame = imageFrame;
     
-    // Update selection overlay to match image view frame
-    if (self.selectionOverlayView) {
-        self.selectionOverlayView.frame = imageFrame;
-        NSLog(@"Updated selection overlay frame to: %@", NSStringFromRect(imageFrame));
-    }
+
     
     // Position info panel on the right side
     if (showInfoPanel) {
@@ -490,12 +470,7 @@
     }
 }
 
-- (void)setupSelectionOverlayView {
-    NSLog(@"Creating SelectionRectangleView programmatically");
-    self.selectionOverlayView = [[SelectionRectangleView alloc] initWithFrame:self.bounds];
-    self.selectionOverlayView.shouldDrawRectangle = NO;
-    [self addSubview:self.selectionOverlayView];
-}
+
 
 - (void)setupMouseTracking {
     // Create a tracking area for the entire view

@@ -719,10 +719,7 @@
                             </customView>
                         </subviews>
                         <constraints>
-                            <constraint firstAttribute="bottom" secondItem="949-ej-eh2" secondAttribute="bottom" id="EeF-Qv-IkH"/>
-                            <constraint firstItem="949-ej-eh2" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="slL-4y-kCH"/>
-                            <constraint firstAttribute="trailing" secondItem="949-ej-eh2" secondAttribute="trailing" id="v5b-a1-OTL"/>
-                            <constraint firstItem="949-ej-eh2" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="zOY-ZK-FeH"/>
+                            
                         </constraints>
                         <connections>
                             <outlet property="imageView" destination="avH-Q3-zBm" id="Heg-WD-5zL"/>

@@ -159,7 +159,6 @@
 				<string>350E5F072690EFB200967E1D</string>
 				<string>3535619E269258B200180B5D</string>
 				<string>350E5F1B2691E91700967E1D</string>
-				<string>37B44A9814614BBAA7F8</string>
 				<string>58A1EBFD2A7C3E5A00462D4E</string>
 				<string>58A1EC012A7C3E5A00462D4E</string>
 				<string>08B6B70999184186AA863FB5</string>
@@ -266,8 +265,6 @@
 				<string>350E5F1A2691E91700967E1D</string>
 				<string>3535619C2692589A00180B5D</string>
 				<string>3535619D269258B200180B5D</string>
-				<string>C257D9999E5D48A58957</string>
-				<string>406E716DDD4740F3BD03</string>
 				<string>58A1EBFB2A7C3E5A00462D4E</string>
 				<string>58A1EBFC2A7C3E5A00462D4E</string>
 				<string>58A1EBFF2A7C3E5A00462D4E</string>
@@ -804,24 +801,6 @@
 			<key>isa</key>
 			<string>PBXBuildFile</string>
 		</dict>
-		<key>37B44A9814614BBAA7F8</key>
-		<dict>
-			<key>fileRef</key>
-			<string>406E716DDD4740F3BD03</string>
-			<key>isa</key>
-			<string>PBXBuildFile</string>
-		</dict>
-		<key>406E716DDD4740F3BD03</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.objc</string>
-			<key>path</key>
-			<string>SelectionRectangleView.m</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
-		</dict>
 		<key>555899BF99564FA58F37DAC5</key>
 		<dict>
 			<key>isa</key>
@@ -933,17 +912,6 @@
 			<string>033A22E3D5BF44B1B936EB12</string>
 			<key>isa</key>
 			<string>PBXBuildFile</string>
-		</dict>
-		<key>C257D9999E5D48A58957</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>lastKnownFileType</key>
-			<string>sourcecode.c.h</string>
-			<key>path</key>
-			<string>SelectionRectangleView.h</string>
-			<key>sourceTree</key>
-			<string>&lt;group&gt;</string>
 		</dict>
 		<key>C9C763DD-AAD0-4D3A-93C3-C662952DDB58</key>
 		<dict/>
