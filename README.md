@@ -4,9 +4,9 @@ Generate a classic Mandelbrot set on the mac using objective c.
 
 ![First Mandelbrot Set Render](https://i.imgur.com/mKIrCGP.png)
 
-![Current Mandelbrot Set Render](https://imgur.com/a/CFrXVo4)
+![Current Mandelbrot Set Render](https://i.imgur.com/gr73mez.png)
 
-Latest Improvements
+## Latest Improvements
 
 * click to zoom
 * settings panel
