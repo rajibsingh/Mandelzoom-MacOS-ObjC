@@ -21,6 +21,8 @@
 @property (nonatomic, strong) NSWindowController *addBookmarkWindowController;
 @property (nonatomic, strong) NSWindowController *openBookmarkWindowController;
 @property (nonatomic, strong) NSWindowController *exportBookmarkWindowController;
+@property (nonatomic, strong) NSWindowController *testOpenWindowController;
+@property (nonatomic, strong) NSWindowController *testExportWindowController;
 
 @end
 
@@ -170,6 +172,7 @@
                                                        keyEquivalent:@"o"];
     openBookmarkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
     openBookmarkItem.target = self;
+    NSLog(@"Created Open Bookmark menu item: %@ with target: %@ and action: %@", openBookmarkItem, openBookmarkItem.target, NSStringFromSelector(openBookmarkItem.action));
     [bookmarksMenu addItem:openBookmarkItem];
     
     // Add separator
@@ -181,6 +184,7 @@
                                                          keyEquivalent:@"e"];
     exportBookmarkItem.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
     exportBookmarkItem.target = self;
+    NSLog(@"Created Export Bookmark menu item: %@ with target: %@ and action: %@", exportBookmarkItem, exportBookmarkItem.target, NSStringFromSelector(exportBookmarkItem.action));
     [bookmarksMenu addItem:exportBookmarkItem];
     
     // Import Bookmark menu item
@@ -305,22 +309,48 @@
 }
 
 - (IBAction)openBookmark:(id)sender {
-    NSLog(@"Open bookmark action called");
+    NSLog(@"=== OPEN BOOKMARK ACTION CALLED ===");
     
-    // Create and show the Open Bookmark window
-    OpenBookmarkViewController *openBookmarkVC = [[OpenBookmarkViewController alloc] init];
-    openBookmarkVC.delegate = self;
-    
-    NSWindow *window = [[NSWindow alloc] initWithContentRect:openBookmarkVC.view.frame
-                                                   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
-                                                     backing:NSBackingStoreBuffered
-                                                       defer:NO];
-    window.title = @"Open Bookmark";
-    window.contentViewController = openBookmarkVC;
-    [window center];
-    
-    self.openBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
-    [self.openBookmarkWindowController.window makeKeyAndOrderFront:self];
+    @try {
+        // Create and show the Open Bookmark window
+        NSLog(@"Creating OpenBookmarkViewController...");
+        OpenBookmarkViewController *openBookmarkVC = [[OpenBookmarkViewController alloc] init];
+        NSLog(@"OpenBookmarkViewController created successfully");
+        
+        openBookmarkVC.delegate = self;
+        NSLog(@"Delegate set");
+        
+        // Create the window with a fixed size
+        NSRect windowFrame = NSMakeRect(100, 100, 900, 600);
+        NSLog(@"Creating window...");
+        NSWindow *window = [[NSWindow alloc] initWithContentRect:windowFrame
+                                                       styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+                                                         backing:NSBackingStoreBuffered
+                                                           defer:NO];
+        NSLog(@"Window created");
+        
+        window.title = @"Open Bookmark";
+        window.delegate = self;
+        NSLog(@"About to set contentViewController...");
+        window.contentViewController = openBookmarkVC;
+        NSLog(@"contentViewController set, centering window...");
+        [window center];
+        
+        NSLog(@"Creating window controller...");
+        self.openBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
+        NSLog(@"Making window visible...");
+        [self.openBookmarkWindowController.window makeKeyAndOrderFront:self];
+        
+        NSLog(@"=== OPEN BOOKMARK WINDOW CREATED SUCCESSFULLY ===");
+    }
+    @catch (NSException *exception) {
+        NSLog(@"ERROR in openBookmark: %@", exception);
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.messageText = @"Open Bookmark Error";
+        alert.informativeText = [NSString stringWithFormat:@"Error: %@", exception.reason];
+        alert.alertStyle = NSAlertStyleCritical;
+        [alert runModal];
+    }
 }
 
 #pragma mark - AddBookmarkViewControllerDelegate
@@ -440,31 +470,48 @@
 #pragma mark - Export/Import Actions
 
 - (IBAction)exportBookmark:(id)sender {
-    NSLog(@"Export bookmark action called");
-    // Check if there are any bookmarks to export
-    NSArray<MandelbrotBookmark *> *bookmarks = [[BookmarkManager sharedManager] getAllBookmarks];
-    if (bookmarks.count == 0) {
-        NSAlert *alert = [[NSAlert alloc] init];
-        alert.messageText = @"No Bookmarks";
-        alert.informativeText = @"There are no bookmarks to export. Please create some bookmarks first.";
-        alert.alertStyle = NSAlertStyleInformational;
-        [alert runModal];
-        return;
+    NSLog(@"=== EXPORT BOOKMARK ACTION CALLED ===");
+    
+    @try {
+        // Create and show the Export Bookmark window
+        NSLog(@"Creating ExportBookmarkViewController...");
+        ExportBookmarkViewController *exportBookmarkVC = [[ExportBookmarkViewController alloc] init];
+        NSLog(@"ExportBookmarkViewController created successfully");
+        
+        exportBookmarkVC.delegate = self;
+        NSLog(@"Delegate set");
+        
+        // Create the window with a fixed size
+        NSRect windowFrame = NSMakeRect(100, 100, 950, 500);
+        NSLog(@"Creating window...");
+        NSWindow *window = [[NSWindow alloc] initWithContentRect:windowFrame
+                                                       styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+                                                         backing:NSBackingStoreBuffered
+                                                           defer:NO];
+        NSLog(@"Window created");
+        
+        window.title = @"Export Bookmark";
+        window.delegate = self;
+        NSLog(@"About to set contentViewController...");
+        window.contentViewController = exportBookmarkVC;
+        NSLog(@"contentViewController set, centering window...");
+        [window center];
+        
+        NSLog(@"Creating window controller...");
+        self.exportBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
+        NSLog(@"Making window visible...");
+        [self.exportBookmarkWindowController.window makeKeyAndOrderFront:self];
+        
+        NSLog(@"=== EXPORT BOOKMARK WINDOW CREATED SUCCESSFULLY ===");
     }
-    
-    // Create and show export bookmark selection window
-    ExportBookmarkViewController *controller = [[ExportBookmarkViewController alloc] init];
-    controller.delegate = self;
-    
-    NSWindow *window = [[NSWindow alloc] initWithContentRect:controller.view.frame
-                                                   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
-                                                     backing:NSBackingStoreBuffered
-                                                       defer:NO];
-    window.title = @"Export Bookmark";
-    window.contentViewController = controller;
-    
-    self.exportBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
-    [self.exportBookmarkWindowController.window makeKeyAndOrderFront:self];
+    @catch (NSException *exception) {
+        NSLog(@"ERROR in exportBookmark: %@", exception);
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.messageText = @"Export Bookmark Error";
+        alert.informativeText = [NSString stringWithFormat:@"Error: %@", exception.reason];
+        alert.alertStyle = NSAlertStyleCritical;
+        [alert runModal];
+    }
 }
 
 - (void)exportBookmarkToFile:(NSURL *)fileURL bookmark:(MandelbrotBookmark *)bookmark {
@@ -787,11 +834,20 @@
 - (void)windowWillClose:(NSNotification *)notification {
     NSWindow *closedWindow = notification.object;
     if (closedWindow == self.openBookmarkWindowController.window) {
+        NSLog(@"Open bookmark window closing, releasing controller");
         self.openBookmarkWindowController = nil;
     } else if (closedWindow == self.exportBookmarkWindowController.window) {
+        NSLog(@"Export bookmark window closing, releasing controller");
         self.exportBookmarkWindowController = nil;
     } else if (closedWindow == self.addBookmarkWindowController.window) {
+        NSLog(@"Add bookmark window closing, releasing controller");
         self.addBookmarkWindowController = nil;
+    } else if (closedWindow == self.testOpenWindowController.window) {
+        NSLog(@"Test Open window closing, releasing controller");
+        self.testOpenWindowController = nil;
+    } else if (closedWindow == self.testExportWindowController.window) {
+        NSLog(@"Test Export window closing, releasing controller");
+        self.testExportWindowController = nil;
     }
 }
 

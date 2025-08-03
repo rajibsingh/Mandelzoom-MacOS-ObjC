@@ -93,8 +93,40 @@
 }
 
 - (NSArray<MandelbrotBookmark *> *)getAllBookmarks {
-    // Return bookmarks sorted by date created (newest first)
-    return [self.bookmarks sortedArrayUsingComparator:^NSComparisonResult(MandelbrotBookmark *a, MandelbrotBookmark *b) {
+    // Filter out any bookmarks with invalid date objects first
+    NSMutableArray *validBookmarks = [[NSMutableArray alloc] init];
+    NSMutableArray *corruptedBookmarks = [[NSMutableArray alloc] init];
+    
+    for (MandelbrotBookmark *bookmark in self.bookmarks) {
+        if (bookmark.dateCreated && [bookmark.dateCreated isKindOfClass:[NSDate class]]) {
+            @try {
+                // Test if the date can be used in comparison (this will trigger the NSTaggedDate error if corrupted)
+                [bookmark.dateCreated compare:[NSDate date]];
+                [validBookmarks addObject:bookmark];
+            }
+            @catch (NSException *exception) {
+                NSLog(@"Found corrupted bookmark with invalid date: %@ - %@", bookmark.title, exception.reason);
+                [corruptedBookmarks addObject:bookmark];
+            }
+        } else {
+            NSLog(@"Found bookmark with missing or invalid date: %@", bookmark.title);
+            // Fix the date for bookmarks with missing dates
+            bookmark.dateCreated = [NSDate date];
+            [validBookmarks addObject:bookmark];
+        }
+    }
+    
+    // Remove corrupted bookmarks from storage
+    if (corruptedBookmarks.count > 0) {
+        NSLog(@"Removing %lu corrupted bookmarks", (unsigned long)corruptedBookmarks.count);
+        for (MandelbrotBookmark *bookmark in corruptedBookmarks) {
+            [self.bookmarks removeObject:bookmark];
+        }
+        [self saveBookmarks]; // Save the cleaned up list
+    }
+    
+    // Return valid bookmarks sorted by date created (newest first)
+    return [validBookmarks sortedArrayUsingComparator:^NSComparisonResult(MandelbrotBookmark *a, MandelbrotBookmark *b) {
         return [b.dateCreated compare:a.dateCreated];
     }];
 }

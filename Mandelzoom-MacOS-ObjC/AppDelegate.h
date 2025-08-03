@@ -25,6 +25,8 @@
 // Bookmark methods
 - (IBAction)addBookmark:(id)sender;
 - (IBAction)openBookmark:(id)sender;
+- (IBAction)exportBookmark:(id)sender;
+- (IBAction)importBookmark:(id)sender;
 
 @end
 

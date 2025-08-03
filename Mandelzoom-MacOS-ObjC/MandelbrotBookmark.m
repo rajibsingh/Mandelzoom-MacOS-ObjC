@@ -107,7 +107,20 @@
                                                                         yMax:[dictionary[@"yMax"] doubleValue]];
     
     if (dictionary[@"dateCreated"]) {
-        bookmark.dateCreated = dictionary[@"dateCreated"];
+        NSString *dateString = dictionary[@"dateCreated"];
+        if ([dateString isKindOfClass:[NSString class]]) {
+            // Parse the string representation back to NSDate
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            formatter.dateFormat = @"yyyy-MM-dd HH:mm:ss Z";
+            bookmark.dateCreated = [formatter dateFromString:dateString];
+            
+            // If that fails, try the description format
+            if (!bookmark.dateCreated) {
+                bookmark.dateCreated = [[NSDate alloc] initWithTimeIntervalSince1970:0]; // Fallback to epoch
+            }
+        } else if ([dateString isKindOfClass:[NSDate class]]) {
+            bookmark.dateCreated = (NSDate *)dateString;
+        }
     }
     if (dictionary[@"uniqueIdentifier"]) {
         bookmark.uniqueIdentifier = dictionary[@"uniqueIdentifier"];

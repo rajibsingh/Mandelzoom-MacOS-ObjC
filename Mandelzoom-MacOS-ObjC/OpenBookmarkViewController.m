@@ -8,6 +8,11 @@
 
 @implementation OpenBookmarkViewController
 
+- (void)loadView {
+    // Create the main view
+    self.view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 900, 600)];
+}
+
 - (void)viewDidLoad {
     NSLog(@"OpenBookmarkViewController viewDidLoad called");
     [super viewDidLoad];
@@ -187,7 +192,13 @@
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         formatter.dateStyle = NSDateFormatterShortStyle;
         formatter.timeStyle = NSDateFormatterShortStyle;
-        cellView.textField.stringValue = [formatter stringFromDate:bookmark.dateCreated];
+        
+        if (bookmark.dateCreated && [bookmark.dateCreated isKindOfClass:[NSDate class]]) {
+            cellView.textField.stringValue = [formatter stringFromDate:bookmark.dateCreated];
+        } else {
+            cellView.textField.stringValue = @"—";
+            cellView.textField.textColor = [NSColor tertiaryLabelColor];
+        }
         cellView.textField.font = [NSFont systemFontOfSize:11];
     }
     
