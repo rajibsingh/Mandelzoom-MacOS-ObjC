@@ -8,6 +8,7 @@
 @property (nonatomic, strong) NSSlider *magnificationSlider;
 @property (nonatomic, strong) NSTextField *magnificationLabel;
 @property (nonatomic, strong) NSButton *showInfoPanelCheckbox;
+@property (nonatomic, strong) NSButton *showRenderTimeCheckbox;
 
 @end
 
@@ -16,12 +17,12 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Settings";
-    self.view.frame = NSMakeRect(0, 0, 400, 300);
+    self.view.frame = NSMakeRect(0, 0, 400, 330);
 
     self.appDelegate = (AppDelegate *)[NSApp delegate];
 
     // Save Location Label
-    self.saveLocationLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 260, 360, 20)];
+    self.saveLocationLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 290, 360, 20)];
     self.saveLocationLabel.editable = NO;
     self.saveLocationLabel.bezeled = NO;
     self.saveLocationLabel.drawsBackground = NO;
@@ -30,16 +31,16 @@
 
     // Choose Save Location Button
     NSButton *chooseLocationButton = [NSButton buttonWithTitle:@"Choose Save Location..." target:self action:@selector(chooseSaveLocation:)];
-    chooseLocationButton.frame = NSMakeRect(20, 220, 200, 25);
+    chooseLocationButton.frame = NSMakeRect(20, 250, 200, 25);
     [self.view addSubview:chooseLocationButton];
 
     // Show Current Save Location Button
     NSButton *showLocationButton = [NSButton buttonWithTitle:@"Show Current Save Location" target:self action:@selector(showCurrentSaveLocation:)];
-    showLocationButton.frame = NSMakeRect(20, 180, 220, 25);
+    showLocationButton.frame = NSMakeRect(20, 210, 220, 25);
     [self.view addSubview:showLocationButton];
     
     // Magnification Level Label
-    self.magnificationLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 130, 360, 20)];
+    self.magnificationLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 160, 360, 20)];
     self.magnificationLabel.editable = NO;
     self.magnificationLabel.bezeled = NO;
     self.magnificationLabel.drawsBackground = NO;
@@ -47,7 +48,7 @@
     [self.view addSubview:self.magnificationLabel];
 
     // Magnification Level Slider
-    self.magnificationSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(20, 100, 360, 20)];
+    self.magnificationSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(20, 130, 360, 20)];
     self.magnificationSlider.minValue = 2;
     self.magnificationSlider.maxValue = 100;
     self.magnificationSlider.integerValue = self.appDelegate.magnificationLevel;
@@ -57,9 +58,15 @@
     
     // Show Info Panel Checkbox
     self.showInfoPanelCheckbox = [NSButton checkboxWithTitle:@"Show Info Panel" target:self action:@selector(showInfoPanelCheckboxChanged:)];
-    self.showInfoPanelCheckbox.frame = NSMakeRect(20, 50, 150, 25);
+    self.showInfoPanelCheckbox.frame = NSMakeRect(20, 80, 150, 25);
     self.showInfoPanelCheckbox.state = self.appDelegate.showInfoPanel ? NSControlStateValueOn : NSControlStateValueOff;
     [self.view addSubview:self.showInfoPanelCheckbox];
+    
+    // Show Render Time Checkbox
+    self.showRenderTimeCheckbox = [NSButton checkboxWithTitle:@"Show Render Time" target:self action:@selector(showRenderTimeCheckboxChanged:)];
+    self.showRenderTimeCheckbox.frame = NSMakeRect(20, 50, 150, 25);
+    self.showRenderTimeCheckbox.state = self.appDelegate.showRenderTime ? NSControlStateValueOn : NSControlStateValueOff;
+    [self.view addSubview:self.showRenderTimeCheckbox];
 }
 
 - (void)magnificationSliderChanged:(NSSlider *)sender {
@@ -74,6 +81,14 @@
     
     // Notify the MandelView to update its layout
     [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowInfoPanelSettingChanged" object:nil];
+}
+
+- (void)showRenderTimeCheckboxChanged:(NSButton *)sender {
+    self.appDelegate.showRenderTime = sender.state == NSControlStateValueOn;
+    [self.appDelegate saveShowRenderTimePreference];
+    
+    // Notify the MandelView to update its layout
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowRenderTimeSettingChanged" object:nil];
 }
 
 - (void)chooseSaveLocation:(id)sender {

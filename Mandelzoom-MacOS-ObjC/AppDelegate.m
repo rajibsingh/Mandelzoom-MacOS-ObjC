@@ -22,6 +22,7 @@
     [self loadSaveLocationPreference];
     [self loadMagnificationLevelPreference];
     [self loadShowInfoPanelPreference];
+    [self loadShowRenderTimePreference];
     [self setupMenuBar];
 }
 
@@ -72,6 +73,21 @@
 - (void)saveShowInfoPanelPreference {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setBool:self.showInfoPanel forKey:@"ShowInfoPanel"];
+    [defaults synchronize];
+}
+
+- (void)loadShowRenderTimePreference {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:@"ShowRenderTime"]) {
+        self.showRenderTime = [defaults boolForKey:@"ShowRenderTime"];
+    } else {
+        self.showRenderTime = YES; // Default to showing the render time
+    }
+}
+
+- (void)saveShowRenderTimePreference {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:self.showRenderTime forKey:@"ShowRenderTime"];
     [defaults synchronize];
 }
 

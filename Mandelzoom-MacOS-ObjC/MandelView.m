@@ -58,6 +58,7 @@
     
     // Listen for settings changes
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(settingsChanged) name:@"ShowInfoPanelSettingChanged" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(renderTimeSettingChanged) name:@"ShowRenderTimeSettingChanged" object:nil];
     
     // Listen for application launch
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidFinishLaunching:) name:NSApplicationDidFinishLaunchingNotification object:nil];
@@ -65,6 +66,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     [self layoutImageView];
+    [self updateRenderTimeLabelVisibility];
 }
 
 -(void) setImage {
@@ -479,7 +481,17 @@
     }
     
     self.renderTimeLabel.stringValue = [NSString stringWithFormat:@"%.3fs", renderTime];
+    [self updateRenderTimeLabelVisibility];
+}
+
+- (void)updateRenderTimeLabelVisibility {
+    AppDelegate *appDelegate = (AppDelegate *)[NSApp delegate];
+    self.renderTimeLabel.hidden = !appDelegate.showRenderTime;
     [self positionRenderTimeLabel];
+}
+
+- (void)renderTimeSettingChanged {
+    [self updateRenderTimeLabelVisibility];
 }
 
 - (void)updateInfoPanel {

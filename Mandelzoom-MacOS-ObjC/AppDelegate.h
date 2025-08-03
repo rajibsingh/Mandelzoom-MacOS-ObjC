@@ -12,10 +12,12 @@
 @property (nonatomic, strong) NSString *saveLocation;
 @property (nonatomic, assign) NSInteger magnificationLevel;
 @property (nonatomic, assign) BOOL showInfoPanel;
+@property (nonatomic, assign) BOOL showRenderTime;
 
 - (void)saveSaveLocationPreference;
 - (void)saveMagnificationLevelPreference;
 - (void)saveShowInfoPanelPreference;
+- (void)saveShowRenderTimePreference;
 
 @end
 
