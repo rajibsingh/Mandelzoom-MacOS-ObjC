@@ -56,11 +56,15 @@
     // Set up mouse tracking for real-time coordinates
     [self setupMouseTracking];
     
-    // Initial layout
-    [self layoutImageView];
-    
     // Listen for settings changes
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(settingsChanged) name:@"ShowInfoPanelSettingChanged" object:nil];
+    
+    // Listen for application launch
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidFinishLaunching:) name:NSApplicationDidFinishLaunchingNotification object:nil];
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)notification {
+    [self layoutImageView];
 }
 
 -(void) setImage {

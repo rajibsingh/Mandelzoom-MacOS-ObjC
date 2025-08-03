@@ -9,7 +9,6 @@
 #import "MandelView.h"
 
 @interface ViewController : NSViewController
-@property (weak) IBOutlet NSTextFieldCell *statusLabel;
 @property (strong) IBOutlet MandelView *mandelView;
 
 
