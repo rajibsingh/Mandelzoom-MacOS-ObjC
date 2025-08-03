@@ -124,8 +124,16 @@
     
     end = clock();
     double renderTime = (double)(end - start)/CLOCKS_PER_SEC;
-    printf("Render (%s) took %f seconds\n",
-           self.useGPUAcceleration ? "GPU" : "CPU", renderTime);
+    
+    // Calculate adaptive iteration count for logging
+    long double width_span = fabsl(creall(self.topRight) - creall(self.bottomLeft));
+    long double zoom_factor = 3.5L / width_span;
+    long double adaptive_iterations = 500 * (1.0L + log10l(fmaxl(zoom_factor, 1.0L)) * 0.5L);
+    int iterations_used = (int)fmaxl(100, fminl(adaptive_iterations, 2000));
+    
+    printf("Render (%s) took %f seconds [%dx%d, %d iterations, %.1Lfx zoom]\n",
+           self.useGPUAcceleration ? "GPU" : "CPU", renderTime, width, height, 
+           iterations_used, zoom_factor);
     return renderTime;
 }
 
@@ -144,7 +152,16 @@
     params.topRight = simd_make_float2((float)creall(self.topRight), (float)cimagl(self.topRight));
     params.width = width;
     params.height = height;
-    params.maxIterations = 500;
+    // Adaptive iteration count based on zoom level
+    long double width_span = fabsl(creall(self.topRight) - creall(self.bottomLeft));
+    long double base_iterations = 500;
+    long double zoom_factor = 3.5L / width_span; // 3.5 is initial width
+    
+    // Scale iterations logarithmically with zoom
+    long double adaptive_iterations = base_iterations * (1.0L + log10l(fmaxl(zoom_factor, 1.0L)) * 0.5L);
+    
+    // Cap at reasonable limits: min 100, max 2000
+    params.maxIterations = (uint32_t)fmaxl(100, fminl(adaptive_iterations, 2000));
     params.escapeRadius = 2.0f;
     
     // Create Metal buffers
@@ -166,10 +183,20 @@
     [encoder setBuffer:outputBuffer offset:0 atIndex:0];
     [encoder setBuffer:paramsBuffer offset:0 atIndex:1];
     
-    // Define threadgroup size
-    MTLSize threadgroupSize = MTLSizeMake(32, 32, 1);
+    // Optimize threadgroup size based on image size and compute pipeline
+    NSUInteger maxThreadsPerGroup = self.computePipeline.maxTotalThreadsPerThreadgroup;
+    NSUInteger threadsPerSIMDGroup = self.computePipeline.threadExecutionWidth;
     
-    // Calculate threadgroup count based on image size and threadgroup size
+    // Use smaller threadgroups for better occupancy on complex computations
+    NSUInteger threadgroupWidth = MIN(16, width);
+    NSUInteger threadgroupHeight = MIN(maxThreadsPerGroup / threadgroupWidth, height);
+    
+    // Ensure threadgroup size is multiple of SIMD width for efficiency
+    threadgroupWidth = (threadgroupWidth + threadsPerSIMDGroup - 1) / threadsPerSIMDGroup * threadsPerSIMDGroup;
+    
+    MTLSize threadgroupSize = MTLSizeMake(threadgroupWidth, threadgroupHeight, 1);
+    
+    // Calculate threadgroup count based on image size and threadgroup size  
     MTLSize threadgroupCount = MTLSizeMake(
         (width + threadgroupSize.width - 1) / threadgroupSize.width,
         (height + threadgroupSize.height - 1) / threadgroupSize.height,
@@ -197,7 +224,17 @@
     long double stepY = fabsl(cimag(tr_coord) - cimag(bl_coord)) / (long double)height;
     
     const long double ESCAPE_RADIUS_SQUARED = 4.0L;  // Standard escape radius^2
-    int MAXITERATIONS = 500;
+    
+    // Adaptive iteration count based on zoom level
+    long double width_span = fabsl(creall(tr_coord) - creall(bl_coord));
+    long double base_iterations = 500;
+    long double zoom_factor = 3.5L / width_span; // 3.5 is initial width
+    
+    // Scale iterations logarithmically with zoom
+    long double adaptive_iterations = base_iterations * (1.0L + log10l(fmaxl(zoom_factor, 1.0L)) * 0.5L);
+    
+    // Cap at reasonable limits: min 100, max 2000
+    int MAXITERATIONS = (int)fmaxl(100, fminl(adaptive_iterations, 2000));
 
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
@@ -227,19 +264,38 @@
                 // Point is in period-2 bulb, definitely in set
                 iteration = MAXITERATIONS;
             } else {
+                // Period detection variables
+                complex long double z_period = z;
+                int period_check = 8;
+                int period_iteration = 0;
                 
                 while (iteration < MAXITERATIONS) {
-                long double z_re = creal(z);
-                long double z_im = cimag(z);
-                long double z_re_sq = z_re * z_re;
-                long double z_im_sq = z_im * z_im;
-                modulus_squared = z_re_sq + z_im_sq;
-                if (modulus_squared > ESCAPE_RADIUS_SQUARED) {
-                    break;
-                }
-                // Reuse pre-calculated squares
-                z = (z_re_sq - z_im_sq + creal(c)) + (2.0L * z_re * z_im + cimag(c)) * I;
-                iteration++;
+                    long double z_re = creal(z);
+                    long double z_im = cimag(z);
+                    long double z_re_sq = z_re * z_re;
+                    long double z_im_sq = z_im * z_im;
+                    modulus_squared = z_re_sq + z_im_sq;
+                    
+                    if (modulus_squared > ESCAPE_RADIUS_SQUARED) {
+                        break;
+                    }
+                    
+                    // Reuse pre-calculated squares
+                    z = (z_re_sq - z_im_sq + creal(c)) + (2.0L * z_re * z_im + cimag(c)) * I;
+                    iteration++;
+                    
+                    // Period detection: check if we've returned to a previous state
+                    period_iteration++;
+                    if (period_iteration >= period_check) {
+                        if (cabsl(z - z_period) < 1e-10L) {
+                            // Found a periodic cycle, point is in the set
+                            iteration = MAXITERATIONS;
+                            break;
+                        }
+                        z_period = z;
+                        period_check *= 2; // Exponential backoff
+                        period_iteration = 0;
+                    }
                 }
             }
             

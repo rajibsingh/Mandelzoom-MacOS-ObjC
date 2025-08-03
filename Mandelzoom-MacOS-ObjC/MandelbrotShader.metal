@@ -41,22 +41,13 @@ inline uint mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq) {
     float2 z = float2(0.0f, 0.0f);
     uint iteration = 0;
     
-    // Unrolled first few iterations for better performance
-    for (uint i = 0; i < maxIter && i < 8; i++) {
-        float zx2 = z.x * z.x;
-        float zy2 = z.y * z.y;
-        float modulusSq = zx2 + zy2;
-        
-        if (modulusSq > escapeRadiusSq) {
-            return i;
-        }
-        
-        z = float2(zx2 - zy2 + c.x, 2.0f * z.x * z.y + c.y);
-        iteration = i + 1;
-    }
+    // Period detection variables
+    float2 z_period = z;
+    uint period_check = 8;
+    uint period_iteration = 0;
     
-    // Continue with regular loop if needed
-    for (uint i = 8; i < maxIter; i++) {
+    // Main iteration loop with period detection
+    for (uint i = 0; i < maxIter; i++) {
         float zx2 = z.x * z.x;
         float zy2 = z.y * z.y;
         float modulusSq = zx2 + zy2;
@@ -66,6 +57,19 @@ inline uint mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq) {
         }
         
         z = float2(zx2 - zy2 + c.x, 2.0f * z.x * z.y + c.y);
+        
+        // Period detection: check if we've returned to a previous state
+        period_iteration++;
+        if (period_iteration >= period_check) {
+            float2 diff = z - z_period;
+            if (dot(diff, diff) < 1e-10f) {
+                // Found a periodic cycle, point is in the set
+                return maxIter;
+            }
+            z_period = z;
+            period_check = min(period_check * 2, 256u); // Exponential backoff with cap
+            period_iteration = 0;
+        }
     }
     
     return maxIter;
