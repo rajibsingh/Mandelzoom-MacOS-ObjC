@@ -79,15 +79,15 @@
     }
     
     // Get the compute function
-    id<MTLFunction> mandelbrotFunction = [library newFunctionWithName:@"mandelbrotKernel"];
+    id<MTLFunction> mandelbrotFunction = [library newFunctionWithName:@"mandelbrotTiledKernel"];
     if (!mandelbrotFunction) {
-        NSLog(@"Failed to load mandelbrotKernel function");
+        NSLog(@"Failed to load mandelbrotTiledKernel function");
         self.useGPUAcceleration = NO;
         return;
     }
     
     // Create compute pipeline state
-    self.computePipeline = [self.metalDevice newComputePipelineStateWithFunction:mandelbrotFunction 
+    self.computePipeline = [self.metalDevice newComputePipelineStateWithFunction:mandelbrotFunction
                                                                            error:&error];
     if (!self.computePipeline) {
         NSLog(@"Failed to create compute pipeline: %@", error.localizedDescription);
@@ -124,7 +124,7 @@
     
     end = clock();
     double renderTime = (double)(end - start)/CLOCKS_PER_SEC;
-    printf("Render (%s) took %f seconds\n", 
+    printf("Render (%s) took %f seconds\n",
            self.useGPUAcceleration ? "GPU" : "CPU", renderTime);
     return renderTime;
 }
@@ -166,12 +166,18 @@
     [encoder setBuffer:outputBuffer offset:0 atIndex:0];
     [encoder setBuffer:paramsBuffer offset:0 atIndex:1];
     
-    // Calculate optimal thread group size for M1 Max
-    MTLSize threadgroupSize = MTLSizeMake(32, 32, 1);  // 1024 threads per group
-    MTLSize gridSize = MTLSizeMake(width, height, 1);
+    // Define threadgroup size
+    MTLSize threadgroupSize = MTLSizeMake(32, 32, 1);
     
-    // Dispatch compute threads
-    [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    // Calculate threadgroup count based on image size and threadgroup size
+    MTLSize threadgroupCount = MTLSizeMake(
+        (width + threadgroupSize.width - 1) / threadgroupSize.width,
+        (height + threadgroupSize.height - 1) / threadgroupSize.height,
+        1
+    );
+    
+    // Dispatch compute threadgroups
+    [encoder dispatchThreadgroups:threadgroupCount threadsPerThreadgroup:threadgroupSize];
     [encoder endEncoding];
     
     // Execute and wait for completion
@@ -181,6 +187,7 @@
     // Copy results back to CPU memory
     memcpy(data, outputBuffer.contents, outputBufferSize);
 }
+
 
 - (void)renderWithCPU:(int)width height:(int)height {
     complex long double bl_coord = self.bottomLeft;

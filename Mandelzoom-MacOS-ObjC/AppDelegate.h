@@ -11,5 +11,7 @@
 
 @property (nonatomic, strong) NSString *saveLocation;
 
+- (void)saveSaveLocationPreference;
+
 @end
 

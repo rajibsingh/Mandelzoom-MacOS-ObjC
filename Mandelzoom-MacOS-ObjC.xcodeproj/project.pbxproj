@@ -15,6 +15,8 @@
 		350E5F1B2691E91700967E1D /* MandelView.m in Sources */ = {isa = PBXBuildFile; fileRef = 350E5F1A2691E91700967E1D /* MandelView.m */; };
 		3535619E269258B200180B5D /* MandelRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3535619D269258B200180B5D /* MandelRenderer.m */; };
 		37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 406E716DDD4740F3BD03 /* SelectionRectangleView.m */; };
+		58A1EBFD2A7C3E5A00462D4E /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 58A1EBFC2A7C3E5A00462D4E /* SettingsViewController.m */; };
+		58A1EC012A7C3E5A00462D4E /* SettingsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 58A1EC002A7C3E5A00462D4E /* SettingsWindowController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +36,10 @@
 		3535619D269258B200180B5D /* MandelRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MandelRenderer.m; sourceTree = "<group>"; };
 		C257D9999E5D48A58957 /* SelectionRectangleView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SelectionRectangleView.h; sourceTree = "<group>"; };
 		406E716DDD4740F3BD03 /* SelectionRectangleView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SelectionRectangleView.m; sourceTree = "<group>"; };
+		58A1EBFB2A7C3E5A00462D4E /* SettingsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
+		58A1EBFC2A7C3E5A00462D4E /* SettingsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
+		58A1EBFF2A7C3E5A00462D4E /* SettingsWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsWindowController.h; sourceTree = "<group>"; };
+		58A1EC002A7C3E5A00462D4E /* SettingsWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsWindowController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +87,10 @@
 				3535619D269258B200180B5D /* MandelRenderer.m */,
 				C257D9999E5D48A58957 /* SelectionRectangleView.h */,
 				406E716DDD4740F3BD03 /* SelectionRectangleView.m */,
+				58A1EBFB2A7C3E5A00462D4E /* SettingsViewController.h */,
+				58A1EBFC2A7C3E5A00462D4E /* SettingsViewController.m */,
+				58A1EBFF2A7C3E5A00462D4E /* SettingsWindowController.h */,
+				58A1EC002A7C3E5A00462D4E /* SettingsWindowController.m */,
 			);
 			path = "Mandelzoom-MacOS-ObjC";
 			sourceTree = "<group>";
@@ -159,6 +169,8 @@
 				3535619E269258B200180B5D /* MandelRenderer.m in Sources */,
 				350E5F1B2691E91700967E1D /* MandelView.m in Sources */,
 				37B44A9814614BBAA7F8 /* SelectionRectangleView.m in Sources */,
+				58A1EBFD2A7C3E5A00462D4E /* SettingsViewController.m in Sources */,
+				58A1EC012A7C3E5A00462D4E /* SettingsWindowController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

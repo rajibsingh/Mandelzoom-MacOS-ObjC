@@ -8,9 +8,11 @@
 #import "AppDelegate.h"
 #import "ViewController.h"
 #import "MandelView.h"
+#import "SettingsWindowController.h"
 
 @interface AppDelegate ()
 
+@property (nonatomic, strong) SettingsWindowController *settingsWindowController;
 
 @end
 
@@ -47,6 +49,14 @@
     NSMenuItem *appMenuItem = [[NSMenuItem alloc] init];
     NSMenu *appMenu = [[NSMenu alloc] init];
     
+    // Add Settings menu item
+    NSMenuItem *settingsMenuItem = [[NSMenuItem alloc] initWithTitle:@"Settings..." action:@selector(showSettings:) keyEquivalent:@","];
+    settingsMenuItem.target = self;
+    [appMenu addItem:settingsMenuItem];
+    
+    // Add separator
+    [appMenu addItem:[NSMenuItem separatorItem]];
+    
     // Add Quit menu item to app menu
     NSMenuItem *quitMenuItem = [[NSMenuItem alloc] initWithTitle:@"Quit Mandelzoom-MacOS-ObjC"
                                                           action:@selector(terminate:)
@@ -73,33 +83,14 @@
     [fileMenuItem setSubmenu:fileMenu];
     [mainMenu addItem:fileMenuItem];
     
-    // Create Settings menu
-    NSMenuItem *settingsMenuItem = [[NSMenuItem alloc] init];
-    settingsMenuItem.title = @"Settings";
-    
-    NSMenu *settingsMenu = [[NSMenu alloc] initWithTitle:@"Settings"];
-    
-    // Add Save Location menu item
-    NSMenuItem *saveLocationItem = [[NSMenuItem alloc] initWithTitle:@"Choose Save Location..." 
-                                                              action:@selector(chooseSaveLocation:) 
-                                                       keyEquivalent:@""];
-    saveLocationItem.target = self;
-    [settingsMenu addItem:saveLocationItem];
-    
-    // Add separator
-    [settingsMenu addItem:[NSMenuItem separatorItem]];
-    
-    // Add Show Current Save Location item
-    NSMenuItem *showLocationItem = [[NSMenuItem alloc] initWithTitle:@"Show Current Save Location" 
-                                                              action:@selector(showCurrentSaveLocation:) 
-                                                       keyEquivalent:@""];
-    showLocationItem.target = self;
-    [settingsMenu addItem:showLocationItem];
-    
-    [settingsMenuItem setSubmenu:settingsMenu];
-    [mainMenu addItem:settingsMenuItem];
-    
     [NSApp setMainMenu:mainMenu];
+}
+
+- (IBAction)showSettings:(id)sender {
+    if (!self.settingsWindowController) {
+        self.settingsWindowController = [[SettingsWindowController alloc] init];
+    }
+    [self.settingsWindowController.window makeKeyAndOrderFront:sender];
 }
 
 - (IBAction)saveImage:(id)sender {
@@ -155,51 +146,6 @@
     }
     [alert runModal];
 }
-
-- (IBAction)chooseSaveLocation:(id)sender {
-    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-    openPanel.canChooseFiles = NO;
-    openPanel.canChooseDirectories = YES;
-    openPanel.canCreateDirectories = YES;
-    openPanel.allowsMultipleSelection = NO;
-    openPanel.title = @"Choose Save Location";
-    openPanel.prompt = @"Choose";
-    openPanel.directoryURL = [NSURL fileURLWithPath:self.saveLocation];
-    
-    [openPanel beginSheetModalForWindow:[NSApp keyWindow] completionHandler:^(NSInteger result) {
-        if (result == NSModalResponseOK) {
-            NSURL *selectedURL = openPanel.URLs.firstObject;
-            if (selectedURL) {
-                self.saveLocation = selectedURL.path;
-                [self saveSaveLocationPreference];
-                
-                // Show confirmation
-                NSAlert *alert = [[NSAlert alloc] init];
-                alert.messageText = @"Save Location Updated";
-                alert.informativeText = [NSString stringWithFormat:@"Images will now be saved to:\n%@", self.saveLocation];
-                [alert runModal];
-            }
-        }
-    }];
-}
-
-- (IBAction)showCurrentSaveLocation:(id)sender {
-    NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = @"Current Save Location";
-    alert.informativeText = [NSString stringWithFormat:@"Images are currently saved to:\n%@", self.saveLocation];
-    alert.alertStyle = NSAlertStyleInformational;
-    
-    // Add button to show in Finder
-    [alert addButtonWithTitle:@"OK"];
-    [alert addButtonWithTitle:@"Show in Finder"];
-    
-    NSInteger response = [alert runModal];
-    if (response == NSAlertSecondButtonReturn) {
-        // Show in Finder
-        [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:self.saveLocation]];
-    }
-}
-
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
