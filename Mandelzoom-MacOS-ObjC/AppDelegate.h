@@ -10,8 +10,12 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (nonatomic, strong) NSString *saveLocation;
+@property (nonatomic, assign) NSInteger magnificationLevel;
+@property (nonatomic, assign) BOOL showInfoPanel;
 
 - (void)saveSaveLocationPreference;
+- (void)saveMagnificationLevelPreference;
+- (void)saveShowInfoPanelPreference;
 
 @end
 

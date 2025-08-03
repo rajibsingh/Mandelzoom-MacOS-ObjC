@@ -20,6 +20,8 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     [self loadSaveLocationPreference];
+    [self loadMagnificationLevelPreference];
+    [self loadShowInfoPanelPreference];
     [self setupMenuBar];
 }
 
@@ -39,6 +41,37 @@
 - (void)saveSaveLocationPreference {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:self.saveLocation forKey:@"SaveLocation"];
+    [defaults synchronize];
+}
+
+- (void)loadMagnificationLevelPreference {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSInteger savedLevel = [defaults integerForKey:@"MagnificationLevel"];
+    if (savedLevel >= 2 && savedLevel <= 100) {
+        self.magnificationLevel = savedLevel;
+    } else {
+        self.magnificationLevel = 2; // Default value
+    }
+}
+
+- (void)saveMagnificationLevelPreference {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setInteger:self.magnificationLevel forKey:@"MagnificationLevel"];
+    [defaults synchronize];
+}
+
+- (void)loadShowInfoPanelPreference {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:@"ShowInfoPanel"]) {
+        self.showInfoPanel = [defaults boolForKey:@"ShowInfoPanel"];
+    } else {
+        self.showInfoPanel = YES; // Default to showing the panel
+    }
+}
+
+- (void)saveShowInfoPanelPreference {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:self.showInfoPanel forKey:@"ShowInfoPanel"];
     [defaults synchronize];
 }
 

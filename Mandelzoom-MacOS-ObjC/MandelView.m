@@ -1,11 +1,11 @@
 //  MandelView.m
 //  Mandelzoom-MacOS-ObjC
 
-#import <Foundation/Foundation.h>
 #import "MandelView.h"
 #import "MandelRenderer.h"
 #import <math.h>
 #import "SelectionRectangleView.h"
+#import "AppDelegate.h"
 
 @implementation MandelView
 {
@@ -58,6 +58,9 @@
     
     // Initial layout
     [self layoutImageView];
+    
+    // Listen for settings changes
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(settingsChanged) name:@"ShowInfoPanelSettingChanged" object:nil];
 }
 
 -(void) setImage {
@@ -349,12 +352,17 @@
 - (void)layoutImageView {
     if (!self.imageView) return;
     
+    AppDelegate *appDelegate = (AppDelegate *)[NSApp delegate];
+    BOOL showInfoPanel = appDelegate.showInfoPanel;
+    
+    self.infoPanel.hidden = !showInfoPanel;
+    
     // Get the container view bounds
     NSRect containerBounds = self.bounds;
     
-    // Reserve space for info panel on the right side
-    CGFloat infoPanelWidth = 250;
-    CGFloat availableWidth = containerBounds.size.width - infoPanelWidth - 20; // 20px margin
+    // Reserve space for info panel on the right side if it's visible
+    CGFloat infoPanelWidth = showInfoPanel ? 250 : 0;
+    CGFloat availableWidth = containerBounds.size.width - infoPanelWidth - (showInfoPanel ? 20 : 0); // 20px margin if panel is shown
     CGFloat availableHeight = containerBounds.size.height;
     
     // Calculate the square size using the smaller available dimension
@@ -378,13 +386,19 @@
     }
     
     // Position info panel on the right side
-    [self positionInfoPanel];
+    if (showInfoPanel) {
+        [self positionInfoPanel];
+    }
     
     // Position render time label in lower right corner of image view
     [self positionRenderTimeLabel];
     
     // Re-render at new size
     [self setImage];
+}
+
+- (void)settingsChanged {
+    [self layoutImageView];
 }
 
 - (void)setupRenderTimeLabel {
@@ -608,6 +622,9 @@
 - (void)performSingleClickZoomAtPoint:(NSPoint)clickPoint {
     NSLog(@"Single click zoom at point (%f, %f)", clickPoint.x, clickPoint.y);
     
+    AppDelegate *appDelegate = (AppDelegate *)[NSApp delegate];
+    long double zoomFactor = appDelegate.magnificationLevel;
+    
     // Convert click point to complex plane coordinates
     NSSize imageSize = self.imageView.bounds.size;
     if (imageSize.width == 0 || imageSize.height == 0) return;
@@ -635,9 +652,9 @@
     
     NSLog(@"Click complex: %Lf + %Lfi", creall(clickComplex), cimagl(clickComplex));
     
-    // Calculate new bounds for 2x zoom centered on click point
-    long double newRealSpan = realSpan / 2.0L;
-    long double newImagSpan = imagSpan / 2.0L;
+    // Calculate new bounds for zoom centered on click point
+    long double newRealSpan = realSpan / zoomFactor;
+    long double newImagSpan = imagSpan / zoomFactor;
     
     long double newBottomLeftReal = clickReal - newRealSpan / 2.0L;
     long double newBottomLeftImag = clickImag - newImagSpan / 2.0L;
@@ -659,6 +676,9 @@
 - (void)performSingleClickZoomOutAtPoint:(NSPoint)clickPoint {
     NSLog(@"Command-click zoom out at point (%f, %f)", clickPoint.x, clickPoint.y);
     
+    AppDelegate *appDelegate = (AppDelegate *)[NSApp delegate];
+    long double zoomFactor = appDelegate.magnificationLevel;
+    
     // Convert click point to complex plane coordinates
     NSSize imageSize = self.imageView.bounds.size;
     if (imageSize.width == 0 || imageSize.height == 0) return;
@@ -686,9 +706,9 @@
     
     NSLog(@"Click complex: %Lf + %Lfi", creall(clickComplex), cimagl(clickComplex));
     
-    // Calculate new bounds for 2x zoom out centered on click point
-    long double newRealSpan = realSpan * 2.0L;
-    long double newImagSpan = imagSpan * 2.0L;
+    // Calculate new bounds for zoom out centered on click point
+    long double newRealSpan = realSpan * zoomFactor;
+    long double newImagSpan = imagSpan * zoomFactor;
     
     long double newBottomLeftReal = clickReal - newRealSpan / 2.0L;
     long double newBottomLeftImag = clickImag - newImagSpan / 2.0L;
