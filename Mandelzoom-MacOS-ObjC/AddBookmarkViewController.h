@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) double yMax;
 
 @property (nonatomic, strong) IBOutlet NSTextField *titleTextField;
-@property (nonatomic, strong) IBOutlet NSTextView *descriptionTextView;
+@property (nonatomic, strong) IBOutlet NSTextField *descriptionTextField;
 @property (nonatomic, strong) IBOutlet NSTextField *coordinatesLabel;
 @property (nonatomic, strong) IBOutlet NSTextField *magnificationLabel;
 @property (nonatomic, strong) IBOutlet NSButton *addButton;

@@ -14,6 +14,16 @@
     [self updateCoordinateInfo];
 }
 
+- (void)viewDidAppear {
+    [super viewDidAppear];
+    // Set up tab navigation after the window is fully loaded
+    [self setupTabNavigation];
+    // Set initial focus
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.view.window makeFirstResponder:self.titleTextField];
+    });
+}
+
 - (void)setupUI {
     self.view.frame = NSMakeRect(0, 0, 520, 380);
     
@@ -40,30 +50,22 @@
     descriptionLabel.font = [NSFont systemFontOfSize:13];
     [self.view addSubview:descriptionLabel];
     
-    // Description text view with scroll view
-    NSScrollView *scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(130, 190, 370, 80)];
-    scrollView.hasVerticalScroller = YES;
-    scrollView.hasHorizontalScroller = NO;
-    scrollView.borderType = NSBezelBorder;
-    scrollView.autohidesScrollers = NO;
+    // Description text field (multi-line)
+    self.descriptionTextField = [[NSTextField alloc] initWithFrame:NSMakeRect(130, 190, 370, 80)];
+    self.descriptionTextField.placeholderString = @"Enter description (optional)";
+    self.descriptionTextField.font = [NSFont systemFontOfSize:13];
+    self.descriptionTextField.editable = YES;
+    self.descriptionTextField.selectable = YES;
+    self.descriptionTextField.bezeled = YES;
+    self.descriptionTextField.bezelStyle = NSTextFieldSquareBezel;
+    self.descriptionTextField.focusRingType = NSFocusRingTypeDefault;
     
-    self.descriptionTextView = [[NSTextView alloc] init];
-    self.descriptionTextView.font = [NSFont systemFontOfSize:13];
-    self.descriptionTextView.string = @"";
-    self.descriptionTextView.editable = YES;
-    self.descriptionTextView.selectable = YES;
-    self.descriptionTextView.richText = NO;
-    self.descriptionTextView.importsGraphics = NO;
-    self.descriptionTextView.textColor = [NSColor textColor];
-    self.descriptionTextView.backgroundColor = [NSColor textBackgroundColor];
+    // Enable multi-line text
+    NSTextFieldCell *cell = (NSTextFieldCell *)self.descriptionTextField.cell;
+    cell.wraps = YES;
+    cell.scrollable = NO;
     
-    // Configure the text container
-    self.descriptionTextView.textContainer.containerSize = NSMakeSize(scrollView.contentSize.width, CGFLOAT_MAX);
-    self.descriptionTextView.textContainer.widthTracksTextView = YES;
-    self.descriptionTextView.textContainer.heightTracksTextView = NO;
-    
-    scrollView.documentView = self.descriptionTextView;
-    [self.view addSubview:scrollView];
+    [self.view addSubview:self.descriptionTextField];
     
     // Coordinates label
     NSTextField *coordsLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 150, 100, 20)];
@@ -107,8 +109,18 @@
     self.addButton.keyEquivalent = @"\r"; // Enter key
     [self.view addSubview:self.addButton];
     
-    // Set initial focus to title field
-    [self.view.window makeFirstResponder:self.titleTextField];
+    // Initial setup will be completed in viewDidAppear
+}
+
+- (void)setupTabNavigation {
+    // Set up the tab navigation chain
+    self.titleTextField.nextKeyView = self.descriptionTextField;
+    self.descriptionTextField.nextKeyView = self.addButton;
+    self.addButton.nextKeyView = self.cancelButton;
+    self.cancelButton.nextKeyView = self.titleTextField;
+    
+    // Set the window's initial first responder
+    self.view.window.initialFirstResponder = self.titleTextField;
 }
 
 - (void)updateCoordinateInfo {
@@ -132,7 +144,10 @@
 
 - (IBAction)addBookmark:(id)sender {
     NSString *title = [self.titleTextField.stringValue stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    NSString *description = [self.descriptionTextView.string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *description = [self.descriptionTextField.stringValue stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    
+    // Debug logging
+    NSLog(@"Add Bookmark - Title: '%@', Description: '%@'", title, description);
     
     if (title.length == 0) {
         NSAlert *alert = [[NSAlert alloc] init];

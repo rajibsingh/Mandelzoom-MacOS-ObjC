@@ -15,10 +15,10 @@
 }
 
 - (void)setupUI {
-    self.view.frame = NSMakeRect(0, 0, 700, 500);
+    self.view.frame = NSMakeRect(0, 0, 900, 600);
     
     // Title label
-    NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 460, 200, 20)];
+    NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 560, 200, 20)];
     titleLabel.editable = NO;
     titleLabel.bezeled = NO;
     titleLabel.drawsBackground = NO;
@@ -27,7 +27,7 @@
     [self.view addSubview:titleLabel];
     
     // Table view with scroll view
-    self.scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(20, 120, 660, 320)];
+    self.scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(20, 150, 860, 400)];
     self.scrollView.hasVerticalScroller = YES;
     self.scrollView.borderType = NSBezelBorder;
     
@@ -40,55 +40,61 @@
     // Create columns
     NSTableColumn *titleColumn = [[NSTableColumn alloc] initWithIdentifier:@"title"];
     titleColumn.title = @"Title";
-    titleColumn.width = 200;
-    titleColumn.minWidth = 150;
+    titleColumn.width = 180;
+    titleColumn.minWidth = 120;
     [self.tableView addTableColumn:titleColumn];
+    
+    NSTableColumn *descriptionColumn = [[NSTableColumn alloc] initWithIdentifier:@"description"];
+    descriptionColumn.title = @"Description";
+    descriptionColumn.width = 200;
+    descriptionColumn.minWidth = 150;
+    [self.tableView addTableColumn:descriptionColumn];
     
     NSTableColumn *magnificationColumn = [[NSTableColumn alloc] initWithIdentifier:@"magnification"];
     magnificationColumn.title = @"Magnification";
-    magnificationColumn.width = 120;
-    magnificationColumn.minWidth = 100;
+    magnificationColumn.width = 100;
+    magnificationColumn.minWidth = 80;
     [self.tableView addTableColumn:magnificationColumn];
     
     NSTableColumn *coordinatesColumn = [[NSTableColumn alloc] initWithIdentifier:@"coordinates"];
     coordinatesColumn.title = @"Coordinates";
-    coordinatesColumn.width = 250;
-    coordinatesColumn.minWidth = 200;
+    coordinatesColumn.width = 220;
+    coordinatesColumn.minWidth = 180;
     [self.tableView addTableColumn:coordinatesColumn];
     
     NSTableColumn *dateColumn = [[NSTableColumn alloc] initWithIdentifier:@"date"];
     dateColumn.title = @"Date Created";
-    dateColumn.width = 140;
-    dateColumn.minWidth = 120;
+    dateColumn.width = 160;
+    dateColumn.minWidth = 140;
     [self.tableView addTableColumn:dateColumn];
     
     self.scrollView.documentView = self.tableView;
     [self.view addSubview:self.scrollView];
     
     // Details label
-    self.detailsLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 70, 660, 40)];
+    self.detailsLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 80, 860, 60)];
     self.detailsLabel.editable = NO;
     self.detailsLabel.bezeled = NO;
     self.detailsLabel.drawsBackground = NO;
     self.detailsLabel.font = [NSFont systemFontOfSize:12];
     self.detailsLabel.textColor = [NSColor secondaryLabelColor];
     self.detailsLabel.stringValue = @"Select a bookmark to view details";
-    self.detailsLabel.maximumNumberOfLines = 2;
+    self.detailsLabel.maximumNumberOfLines = 3;
     self.detailsLabel.lineBreakMode = NSLineBreakByWordWrapping;
     [self.view addSubview:self.detailsLabel];
     
     // Buttons
     self.cancelButton = [NSButton buttonWithTitle:@"Cancel" target:self action:@selector(cancel:)];
-    self.cancelButton.frame = NSMakeRect(460, 20, 80, 32);
+    self.cancelButton.frame = NSMakeRect(620, 20, 80, 32);
     [self.view addSubview:self.cancelButton];
     
     self.deleteButton = [NSButton buttonWithTitle:@"Delete" target:self action:@selector(deleteBookmark:)];
-    self.deleteButton.frame = NSMakeRect(550, 20, 80, 32);
+    self.deleteButton.frame = NSMakeRect(710, 20, 80, 32);
     self.deleteButton.enabled = NO;
     [self.view addSubview:self.deleteButton];
     
     self.openButton = [NSButton buttonWithTitle:@"Open" target:self action:@selector(openBookmark:)];
-    self.openButton.frame = NSMakeRect(640, 20, 80, 32);
+    self.openButton.frame = NSMakeRect(800, 20, 80, 32);
     self.openButton.keyEquivalent = @"\r"; // Enter key
     self.openButton.enabled = NO;
     [self.view addSubview:self.openButton];
@@ -142,6 +148,18 @@
     
     if ([identifier isEqualToString:@"title"]) {
         cellView.textField.stringValue = bookmark.title;
+    } else if ([identifier isEqualToString:@"description"]) {
+        NSString *desc = bookmark.bookmarkDescription;
+        if (desc.length > 0) {
+            // Truncate long descriptions for table display
+            if (desc.length > 50) {
+                desc = [[desc substringToIndex:47] stringByAppendingString:@"..."];
+            }
+            cellView.textField.stringValue = desc;
+        } else {
+            cellView.textField.stringValue = @"—";
+            cellView.textField.textColor = [NSColor tertiaryLabelColor];
+        }
     } else if ([identifier isEqualToString:@"magnification"]) {
         double mag = bookmark.magnification;
         if (mag >= 1000000) {
@@ -154,12 +172,13 @@
     } else if ([identifier isEqualToString:@"coordinates"]) {
         cellView.textField.stringValue = [NSString stringWithFormat:@"(%.3f, %.3f) to (%.3f, %.3f)", 
                                          bookmark.xMin, bookmark.yMin, bookmark.xMax, bookmark.yMax];
-        cellView.textField.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
+        cellView.textField.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
     } else if ([identifier isEqualToString:@"date"]) {
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-        formatter.dateStyle = NSDateFormatterMediumStyle;
+        formatter.dateStyle = NSDateFormatterShortStyle;
         formatter.timeStyle = NSDateFormatterShortStyle;
         cellView.textField.stringValue = [formatter stringFromDate:bookmark.dateCreated];
+        cellView.textField.font = [NSFont systemFontOfSize:11];
     }
     
     return cellView;

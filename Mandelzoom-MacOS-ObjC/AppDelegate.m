@@ -291,17 +291,68 @@
     [self.addBookmarkWindowController.window close];
     self.addBookmarkWindowController = nil;
     
-    // Show success message
-    NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = @"Bookmark Added";
-    alert.informativeText = [NSString stringWithFormat:@"Bookmark \"%@\" has been saved successfully.", bookmark.title];
-    alert.alertStyle = NSAlertStyleInformational;
-    [alert runModal];
+    // Show auto-dismissing success message
+    [self showAutoHidingBookmarkConfirmation:bookmark.title];
 }
 
 - (void)addBookmarkViewControllerDidCancel:(AddBookmarkViewController *)controller {
     [self.addBookmarkWindowController.window close];
     self.addBookmarkWindowController = nil;
+}
+
+- (void)showAutoHidingBookmarkConfirmation:(NSString *)bookmarkTitle {
+    // Create a simple window to show the confirmation
+    NSWindow *confirmationWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 400, 120)
+                                                                styleMask:NSWindowStyleMaskBorderless
+                                                                  backing:NSBackingStoreBuffered
+                                                                    defer:NO];
+    
+    confirmationWindow.backgroundColor = [NSColor colorWithWhite:0.0 alpha:0.8];
+    confirmationWindow.level = NSFloatingWindowLevel;
+    confirmationWindow.hasShadow = YES;
+    
+    // Create content view
+    NSView *contentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 400, 120)];
+    confirmationWindow.contentView = contentView;
+    
+    // Add title label
+    NSTextField *titleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 70, 360, 24)];
+    titleLabel.stringValue = @"Bookmark Added";
+    titleLabel.font = [NSFont systemFontOfSize:18 weight:NSFontWeightSemibold];
+    titleLabel.textColor = [NSColor whiteColor];
+    titleLabel.backgroundColor = [NSColor clearColor];
+    titleLabel.editable = NO;
+    titleLabel.bezeled = NO;
+    titleLabel.alignment = NSTextAlignmentCenter;
+    [contentView addSubview:titleLabel];
+    
+    // Add message label
+    NSTextField *messageLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 30, 360, 40)];
+    messageLabel.stringValue = [NSString stringWithFormat:@"Bookmark \"%@\" has been saved successfully.", bookmarkTitle];
+    messageLabel.font = [NSFont systemFontOfSize:14];
+    messageLabel.textColor = [NSColor whiteColor];
+    messageLabel.backgroundColor = [NSColor clearColor];
+    messageLabel.editable = NO;
+    messageLabel.bezeled = NO;
+    messageLabel.alignment = NSTextAlignmentCenter;
+    messageLabel.maximumNumberOfLines = 2;
+    messageLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    [contentView addSubview:messageLabel];
+    
+    // Center the window on screen
+    NSRect screenFrame = [NSScreen mainScreen].frame;
+    NSRect windowFrame = confirmationWindow.frame;
+    windowFrame.origin.x = (screenFrame.size.width - windowFrame.size.width) / 2;
+    windowFrame.origin.y = (screenFrame.size.height - windowFrame.size.height) / 2 + 100; // Slightly above center
+    [confirmationWindow setFrame:windowFrame display:YES];
+    
+    // Show the window
+    [confirmationWindow makeKeyAndOrderFront:nil];
+    
+    // Auto-hide after 2 seconds
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [confirmationWindow orderOut:nil];
+    });
 }
 
 #pragma mark - OpenBookmarkViewControllerDelegate
