@@ -306,36 +306,20 @@
 - (IBAction)openBookmark:(id)sender {
     NSLog(@"Open bookmark action called");
     
-    // Create a simplified bookmark window without using the problematic OpenBookmarkViewController
-    NSWindow *bookmarkWindow = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 600, 400)
-                                                            styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
-                                                              backing:NSBackingStoreBuffered
-                                                                defer:NO];
-    bookmarkWindow.title = @"Open Bookmark";
+    // Create and show the Open Bookmark window
+    OpenBookmarkViewController *openBookmarkVC = [[OpenBookmarkViewController alloc] init];
+    openBookmarkVC.delegate = self;
     
-    // Add a simple message for now
-    NSTextField *messageLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(50, 200, 500, 30)];
-    messageLabel.stringValue = @"Open Bookmark functionality - Under Development";
-    messageLabel.editable = NO;
-    messageLabel.bezeled = NO;
-    messageLabel.drawsBackground = NO;
-    messageLabel.alignment = NSTextAlignmentCenter;
-    [bookmarkWindow.contentView addSubview:messageLabel];
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:openBookmarkVC.view.frame
+                                                   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    window.title = @"Open Bookmark";
+    window.contentViewController = openBookmarkVC;
+    [window center];
     
-    // Add bookmark count
-    NSArray<MandelbrotBookmark *> *bookmarks = [[BookmarkManager sharedManager] getAllBookmarks];
-    NSTextField *countLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(50, 160, 500, 30)];
-    countLabel.stringValue = [NSString stringWithFormat:@"Found %lu bookmarks", (unsigned long)bookmarks.count];
-    countLabel.editable = NO;
-    countLabel.bezeled = NO;
-    countLabel.drawsBackground = NO;
-    countLabel.alignment = NSTextAlignmentCenter;
-    [bookmarkWindow.contentView addSubview:countLabel];
-    
-    [bookmarkWindow center];
-    [bookmarkWindow makeKeyAndOrderFront:self];
-    
-    NSLog(@"Bookmark window displayed");
+    self.openBookmarkWindowController = [[NSWindowController alloc] initWithWindow:window];
+    [self.openBookmarkWindowController.window makeKeyAndOrderFront:self];
 }
 
 #pragma mark - AddBookmarkViewControllerDelegate
