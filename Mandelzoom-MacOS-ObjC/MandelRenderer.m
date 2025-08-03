@@ -307,33 +307,33 @@
                 pxl.gChannel = 0;
                 pxl.bChannel = 0;
             } else {
-                // Classic Mandelbrot coloring with prominent white boundary
+                // Enhanced Mandelbrot coloring with prominent white boundary
                 long double smooth_iteration = iteration + 1.0L - log2l(0.5L * log2l(modulus_squared));
                 
-                // Scale for color mapping - use smaller divisor for more prominent white band
-                long double t = smooth_iteration / 20.0L;
+                // Use smaller divisor for more prominent white boundaries
+                long double t = smooth_iteration / 12.0L;  // Reduced from 20.0L to 12.0L
                 t = fminl(t, 1.0L);
                 
-                if (t < 0.15L) {
-                    // Very close to boundary - bright white
+                if (t < 0.2L) {
+                    // Extended white boundary region - bright white
                     pxl.rChannel = 255;
                     pxl.gChannel = 255;
                     pxl.bChannel = 255;
-                } else if (t < 0.3L) {
+                } else if (t < 0.35L) {
                     // White to light blue transition
-                    long double factor = (t - 0.15L) / 0.15L; // 0 to 1
+                    long double factor = (t - 0.2L) / 0.15L; // 0 to 1
                     pxl.rChannel = (UInt8)(255.0L - factor * 155.0L); // 255 to 100
                     pxl.gChannel = (UInt8)(255.0L - factor * 155.0L); // 255 to 100
                     pxl.bChannel = 255; // Keep blue at max
-                } else if (t < 0.6L) {
+                } else if (t < 0.65L) {
                     // Light blue to medium blue
-                    long double factor = (t - 0.3L) / 0.3L; // 0 to 1
+                    long double factor = (t - 0.35L) / 0.3L; // 0 to 1
                     pxl.rChannel = (UInt8)(100.0L - factor * 80.0L);  // 100 to 20
                     pxl.gChannel = (UInt8)(100.0L - factor * 70.0L);  // 100 to 30
                     pxl.bChannel = 255; // Keep blue at max
                 } else {
                     // Medium blue to dark blue
-                    long double factor = (t - 0.6L) / 0.4L; // 0 to 1
+                    long double factor = (t - 0.65L) / 0.35L; // 0 to 1
                     pxl.rChannel = (UInt8)(20.0L - factor * 20.0L);   // 20 to 0
                     pxl.gChannel = (UInt8)(30.0L - factor * 30.0L);   // 30 to 0
                     pxl.bChannel = (UInt8)(255.0L - factor * 100.0L); // 255 to 155

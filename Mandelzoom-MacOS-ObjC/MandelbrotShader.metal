@@ -24,22 +24,25 @@ struct PixelData {
 };
 
 // Fast Mandelbrot iteration function optimized for GPU
-inline uint mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq) {
+inline float mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq, thread float& finalModulusSq) {
     // Early bailout: check main cardioid
     float x = c.x;
     float y = c.y;
     float q = (x - 0.25f) * (x - 0.25f) + y * y;
     if (q * (q + (x - 0.25f)) < 0.25f * y * y) {
-        return maxIter; // In main cardioid
+        finalModulusSq = 0.0f;
+        return float(maxIter); // In main cardioid
     }
     
     // Early bailout: check period-2 bulb
     if ((x + 1.0f) * (x + 1.0f) + y * y < 0.0625f) {
-        return maxIter; // In period-2 bulb
+        finalModulusSq = 0.0f;
+        return float(maxIter); // In period-2 bulb
     }
     
     float2 z = float2(0.0f, 0.0f);
     uint iteration = 0;
+    float modulusSq = 0.0f;
     
     // Period detection variables
     float2 z_period = z;
@@ -50,10 +53,11 @@ inline uint mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq) {
     for (uint i = 0; i < maxIter; i++) {
         float zx2 = z.x * z.x;
         float zy2 = z.y * z.y;
-        float modulusSq = zx2 + zy2;
+        modulusSq = zx2 + zy2;
         
         if (modulusSq > escapeRadiusSq) {
-            return i;
+            iteration = i;
+            break;
         }
         
         z = float2(zx2 - zy2 + c.x, 2.0f * z.x * z.y + c.y);
@@ -64,7 +68,8 @@ inline uint mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq) {
             float2 diff = z - z_period;
             if (dot(diff, diff) < 1e-10f) {
                 // Found a periodic cycle, point is in the set
-                return maxIter;
+                finalModulusSq = 0.0f;
+                return float(maxIter);
             }
             z_period = z;
             period_check = min(period_check * 2, 256u); // Exponential backoff with cap
@@ -72,38 +77,42 @@ inline uint mandelbrotIterations(float2 c, uint maxIter, float escapeRadiusSq) {
         }
     }
     
-    return maxIter;
+    finalModulusSq = modulusSq;
+    return float(iteration);
 }
 
-// Optimized color calculation with smooth gradients
-inline uchar4 calculateColor(uint iterations, uint maxIterations, float smoothValue) {
-    if (iterations == maxIterations) {
+// Enhanced color calculation with prominent white boundaries
+inline uchar4 calculateColor(float iterations, uint maxIterations, float modulusSq) {
+    if (iterations >= float(maxIterations)) {
         return uchar4(0, 0, 0, 255); // Black for interior
     }
     
-    // Smooth iteration value for anti-aliasing
-    float t = (float(iterations) + smoothValue) / 20.0f;
+    // Enhanced smooth iteration calculation matching CPU version
+    float smoothIteration = iterations + 1.0f - log2(0.5f * log2(modulusSq));
+    
+    // Use smaller divisor for more prominent white boundaries
+    float t = smoothIteration / 12.0f;  // Reduced from 20.0f to 12.0f
     t = min(t, 1.0f);
     
     uchar r, g, b;
     
-    if (t < 0.15f) {
-        // Very close to boundary - bright white
+    if (t < 0.2f) {
+        // Extended white boundary region - bright white
         r = g = b = 255;
-    } else if (t < 0.3f) {
+    } else if (t < 0.35f) {
         // White to light blue transition
-        float factor = (t - 0.15f) / 0.15f;
+        float factor = (t - 0.2f) / 0.15f;
         r = g = uchar(255.0f - factor * 155.0f);
         b = 255;
-    } else if (t < 0.6f) {
+    } else if (t < 0.65f) {
         // Light blue to medium blue
-        float factor = (t - 0.3f) / 0.3f;
+        float factor = (t - 0.35f) / 0.3f;
         r = uchar(100.0f - factor * 80.0f);
         g = uchar(100.0f - factor * 70.0f);
         b = 255;
     } else {
         // Medium blue to dark blue
-        float factor = (t - 0.6f) / 0.4f;
+        float factor = (t - 0.65f) / 0.35f;
         r = uchar(20.0f - factor * 20.0f);
         g = uchar(30.0f - factor * 30.0f);
         b = uchar(255.0f - factor * 100.0f);
@@ -129,18 +138,12 @@ kernel void mandelbrotKernel(device PixelData* output [[buffer(0)]],
         (float(params.height - gid.y - 1) / float(params.height)) * range.y
     );
     
-    // Calculate Mandelbrot iterations
-    uint iterations = mandelbrotIterations(c, params.maxIterations, params.escapeRadius * params.escapeRadius);
-    
-    // Calculate smooth value for anti-aliasing (simplified for GPU)
-    float smoothValue = 0.0f;
-    if (iterations < params.maxIterations) {
-        // Quick approximation for smoothing
-        smoothValue = 1.0f - log2(log2(4.0f));
-    }
+    // Calculate Mandelbrot iterations with modulus squared
+    float modulusSq;
+    float iterations = mandelbrotIterations(c, params.maxIterations, params.escapeRadius * params.escapeRadius, modulusSq);
     
     // Calculate color and store result
-    uchar4 color = calculateColor(iterations, params.maxIterations, smoothValue);
+    uchar4 color = calculateColor(iterations, params.maxIterations, modulusSq);
     output[gid.y * params.width + gid.x].color = color;
 }
 
@@ -169,8 +172,9 @@ kernel void mandelbrotTiledKernel(device PixelData* output [[buffer(0)]],
             (float(params.height - gid.y - 1) / float(params.height)) * range.y
         );
         
-        uint iterations = mandelbrotIterations(c, params.maxIterations, params.escapeRadius * params.escapeRadius);
-        uchar4 color = calculateColor(iterations, params.maxIterations, 0.0f);
+        float modulusSq;
+        float iterations = mandelbrotIterations(c, params.maxIterations, params.escapeRadius * params.escapeRadius, modulusSq);
+        uchar4 color = calculateColor(iterations, params.maxIterations, modulusSq);
         
         output[gid.y * params.width + pixelX].color = color;
     }
