@@ -45,6 +45,9 @@
     // Set up render time label
     [self setupRenderTimeLabel];
     
+    // Set up info panel
+    [self setupInfoPanel];
+    
     // Set up selection overlay view if not connected from storyboard
     if (!self.selectionOverlayView) {
         [self setupSelectionOverlayView];
@@ -65,6 +68,7 @@
     double renderTime;
     _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
     [self updateRenderTimeDisplay:renderTime];
+    [self updateInfoPanel];
     
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
@@ -86,6 +90,7 @@
     double renderTime;
     _imageView.image = [renderer renderWithWidth:resolution height:resolution renderTime:&renderTime];
     [self updateRenderTimeDisplay:renderTime];
+    [self updateInfoPanel];
     
     if (self.selectionOverlayView) {
         self.selectionOverlayView.shouldDrawRectangle = NO;
@@ -178,8 +183,14 @@
         // Check if this was just a click (small movement) vs actual panning
         CGFloat dragDistance = sqrt(pow(mouseUpLoc.x - mouseDownLoc.x, 2) + pow(mouseUpLoc.y - mouseDownLoc.y, 2));
         if (dragDistance < 5) {
-            // Single click - zoom in 2x at the clicked point
-            [self performSingleClickZoomAtPoint:mouseDownLoc];
+            // Check for control-click (zoom out) vs regular click (zoom in)
+            if ([event modifierFlags] & NSEventModifierFlagControl) {
+                // Control-click - zoom out 2x at the clicked point
+                [self performSingleClickZoomOutAtPoint:mouseDownLoc];
+            } else {
+                // Regular click - zoom in 2x at the clicked point
+                [self performSingleClickZoomAtPoint:mouseDownLoc];
+            }
         }
         NSLog(@"Finished panning/clicking");
         return;
@@ -291,13 +302,18 @@
     // Get the container view bounds
     NSRect containerBounds = self.bounds;
     
-    // Calculate the square size using the smaller dimension
-    CGFloat minDimension = fmin(containerBounds.size.width, containerBounds.size.height);
+    // Reserve space for info panel on the right side
+    CGFloat infoPanelWidth = 250;
+    CGFloat availableWidth = containerBounds.size.width - infoPanelWidth - 20; // 20px margin
+    CGFloat availableHeight = containerBounds.size.height;
     
-    // Create square frame centered in the container
+    // Calculate the square size using the smaller available dimension
+    CGFloat minDimension = fmin(availableWidth, availableHeight);
+    
+    // Create square frame, left-aligned in available space
     NSRect imageFrame = NSMakeRect(
-        (containerBounds.size.width - minDimension) / 2.0,  // Center horizontally
-        (containerBounds.size.height - minDimension) / 2.0, // Center vertically
+        (availableWidth - minDimension) / 2.0,  // Center in available width
+        (availableHeight - minDimension) / 2.0, // Center vertically
         minDimension,
         minDimension
     );
@@ -310,6 +326,9 @@
         self.selectionOverlayView.frame = imageFrame;
         NSLog(@"Updated selection overlay frame to: %@", NSStringFromRect(imageFrame));
     }
+    
+    // Position info panel on the right side
+    [self positionInfoPanel];
     
     // Position render time label in lower right corner of image view
     [self positionRenderTimeLabel];
@@ -338,6 +357,32 @@
     }
 }
 
+- (void)positionInfoPanel {
+    if (!self.infoPanel) return;
+    
+    NSRect containerBounds = self.bounds;
+    CGFloat infoPanelWidth = 230;
+    CGFloat infoPanelHeight = 120;
+    
+    // Position panel on the right side with margin
+    NSRect panelFrame = NSMakeRect(
+        containerBounds.size.width - infoPanelWidth - 10,  // 10px right margin
+        containerBounds.size.height - infoPanelHeight - 10, // 10px top margin
+        infoPanelWidth,
+        infoPanelHeight
+    );
+    
+    self.infoPanel.frame = panelFrame;
+    
+    // Position labels within the panel
+    CGFloat labelHeight = 20;
+    CGFloat margin = 10;
+    
+    self.xRangeLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - labelHeight, infoPanelWidth - 2*margin, labelHeight);
+    self.yRangeLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 2*labelHeight - 5, infoPanelWidth - 2*margin, labelHeight);
+    self.magnificationLabel.frame = NSMakeRect(margin, infoPanelHeight - margin - 3*labelHeight - 10, infoPanelWidth - 2*margin, labelHeight);
+}
+
 - (void)positionRenderTimeLabel {
     if (!self.renderTimeLabel || !self.imageView) return;
     
@@ -364,6 +409,81 @@
     
     self.renderTimeLabel.stringValue = [NSString stringWithFormat:@"%.3fs", renderTime];
     [self positionRenderTimeLabel];
+}
+
+- (void)updateInfoPanel {
+    if (!self.infoPanel || !renderer) return;
+    
+    // Get current complex plane bounds
+    complex long double bottomLeft = renderer.bottomLeft;
+    complex long double topRight = renderer.topRight;
+    
+    long double xMin = creall(bottomLeft);
+    long double xMax = creall(topRight);
+    long double yMin = cimagl(bottomLeft);
+    long double yMax = cimagl(topRight);
+    
+    // Calculate magnification compared to initial view
+    long double initialWidth = creall(initialTopRight) - creall(initialBottomLeft);
+    long double currentWidth = xMax - xMin;
+    long double magnification = initialWidth / currentWidth;
+    
+    // Update labels with formatted text
+    self.xRangeLabel.stringValue = [NSString stringWithFormat:@"X: %.5Lf to %.5Lf", xMin, xMax];
+    self.yRangeLabel.stringValue = [NSString stringWithFormat:@"Y: %.5Lf to %.5Lf", yMin, yMax];
+    
+    if (magnification >= 1000000) {
+        self.magnificationLabel.stringValue = [NSString stringWithFormat:@"Mag: %.2LfM×", magnification / 1000000.0L];
+    } else if (magnification >= 1000) {
+        self.magnificationLabel.stringValue = [NSString stringWithFormat:@"Mag: %.2LfK×", magnification / 1000.0L];
+    } else {
+        self.magnificationLabel.stringValue = [NSString stringWithFormat:@"Mag: %.2Lf×", magnification];
+    }
+}
+
+- (void)setupInfoPanel {
+    if (!self.infoPanel) {
+        // Create info panel container
+        self.infoPanel = [[NSView alloc] init];
+        self.infoPanel.wantsLayer = YES;
+        self.infoPanel.layer.backgroundColor = [NSColor colorWithWhite:0.95 alpha:0.9].CGColor;
+        self.infoPanel.layer.cornerRadius = 8.0;
+        self.infoPanel.layer.borderWidth = 1.0;
+        self.infoPanel.layer.borderColor = [NSColor lightGrayColor].CGColor;
+        
+        // Create labels
+        self.xRangeLabel = [[NSTextField alloc] init];
+        self.xRangeLabel.editable = NO;
+        self.xRangeLabel.bezeled = NO;
+        self.xRangeLabel.drawsBackground = NO;
+        self.xRangeLabel.font = [NSFont monospacedSystemFontOfSize:11.0 weight:NSFontWeightRegular];
+        self.xRangeLabel.textColor = [NSColor blackColor];
+        self.xRangeLabel.alignment = NSTextAlignmentLeft;
+        
+        self.yRangeLabel = [[NSTextField alloc] init];
+        self.yRangeLabel.editable = NO;
+        self.yRangeLabel.bezeled = NO;
+        self.yRangeLabel.drawsBackground = NO;
+        self.yRangeLabel.font = [NSFont monospacedSystemFontOfSize:11.0 weight:NSFontWeightRegular];
+        self.yRangeLabel.textColor = [NSColor blackColor];
+        self.yRangeLabel.alignment = NSTextAlignmentLeft;
+        
+        self.magnificationLabel = [[NSTextField alloc] init];
+        self.magnificationLabel.editable = NO;
+        self.magnificationLabel.bezeled = NO;
+        self.magnificationLabel.drawsBackground = NO;
+        self.magnificationLabel.font = [NSFont monospacedSystemFontOfSize:11.0 weight:NSFontWeightRegular];
+        self.magnificationLabel.textColor = [NSColor blackColor];
+        self.magnificationLabel.alignment = NSTextAlignmentLeft;
+        
+        // Add labels to panel
+        [self.infoPanel addSubview:self.xRangeLabel];
+        [self.infoPanel addSubview:self.yRangeLabel];
+        [self.infoPanel addSubview:self.magnificationLabel];
+        
+        // Add panel to view
+        [self addSubview:self.infoPanel];
+    }
 }
 
 - (void)setupSelectionOverlayView {
@@ -435,6 +555,57 @@
     // Calculate new bounds for 2x zoom centered on click point
     long double newRealSpan = realSpan / 2.0L;
     long double newImagSpan = imagSpan / 2.0L;
+    
+    long double newBottomLeftReal = clickReal - newRealSpan / 2.0L;
+    long double newBottomLeftImag = clickImag - newImagSpan / 2.0L;
+    long double newTopRightReal = clickReal + newRealSpan / 2.0L;
+    long double newTopRightImag = clickImag + newImagSpan / 2.0L;
+    
+    // Update renderer coordinates
+    renderer.bottomLeft = newBottomLeftReal + newBottomLeftImag * I;
+    renderer.topRight = newTopRightReal + newTopRightImag * I;
+    
+    NSLog(@"New bounds: %Lf+%Lfi to %Lf+%Lfi", 
+          creall(renderer.bottomLeft), cimagl(renderer.bottomLeft),
+          creall(renderer.topRight), cimagl(renderer.topRight));
+    
+    // Re-render the image
+    [self setImage];
+}
+
+- (void)performSingleClickZoomOutAtPoint:(NSPoint)clickPoint {
+    NSLog(@"Single click zoom out at point (%f, %f)", clickPoint.x, clickPoint.y);
+    
+    // Convert click point to complex plane coordinates
+    NSSize imageSize = self.imageView.bounds.size;
+    if (imageSize.width == 0 || imageSize.height == 0) return;
+    
+    // Get current complex plane bounds
+    complex long double currentBottomLeft = renderer.bottomLeft;
+    complex long double currentTopRight = renderer.topRight;
+    
+    long double realSpan = creall(currentTopRight) - creall(currentBottomLeft);
+    long double imagSpan = cimagl(currentTopRight) - cimagl(currentBottomLeft);
+    
+    // Convert click point from view coordinates to image coordinates
+    NSRect imageFrame = self.imageView.frame;
+    CGFloat relativeX = (clickPoint.x - imageFrame.origin.x) / imageFrame.size.width;
+    CGFloat relativeY = (clickPoint.y - imageFrame.origin.y) / imageFrame.size.height;
+    
+    // Clamp to image bounds
+    relativeX = fmax(0.0, fmin(1.0, relativeX));
+    relativeY = fmax(0.0, fmin(1.0, relativeY));
+    
+    // Convert to complex plane coordinates (note Y inversion)
+    long double clickReal = creall(currentBottomLeft) + relativeX * realSpan;
+    long double clickImag = cimagl(currentBottomLeft) + (1.0 - relativeY) * imagSpan;
+    complex long double clickComplex = clickReal + clickImag * I;
+    
+    NSLog(@"Click complex: %Lf + %Lfi", creall(clickComplex), cimagl(clickComplex));
+    
+    // Calculate new bounds for 2x zoom out centered on click point
+    long double newRealSpan = realSpan * 2.0L;
+    long double newImagSpan = imagSpan * 2.0L;
     
     long double newBottomLeftReal = clickReal - newRealSpan / 2.0L;
     long double newBottomLeftImag = clickImag - newImagSpan / 2.0L;

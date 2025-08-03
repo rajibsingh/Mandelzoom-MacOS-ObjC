@@ -18,10 +18,10 @@
 @implementation MandelRenderer
 {
     struct pixel {
-        UInt8 aChannel;
         UInt8 rChannel;
         UInt8 gChannel;
         UInt8 bChannel;
+        UInt8 aChannel;
     };
     
     struct pixel *data;
@@ -109,19 +109,32 @@
                 pxl.gChannel = 0;
                 pxl.bChannel = 0;
             } else {
-                // Classic blue Mandelbrot coloring
+                // Classic Mandelbrot coloring: white near boundary, transitioning to deep blue
                 long double smooth_iteration = iteration + 1.0L - log2l(0.5L * log2l(modulus_squared));
                 
-                // Simple blue gradient based on iteration count
-                long double t = smooth_iteration / 50.0L; // Scale for better gradient
+                // Scale for color mapping
+                long double t = smooth_iteration / 50.0L;
                 t = fminl(t, 1.0L);
                 
-                // Deep blue (0,0,128) to bright white (255,255,255)
-                long double intensity = powl(t, 0.5L); // Gamma correction for better gradient
-                
-                pxl.rChannel = (UInt8)(intensity * 255.0L);
-                pxl.gChannel = (UInt8)(intensity * 255.0L);
-                pxl.bChannel = (UInt8)(128.0L + intensity * 127.0L); // Start from blue, go to white
+                if (t < 0.2L) {
+                    // Very close to boundary - bright white/yellow
+                    long double factor = t / 0.2L; // 0 to 1
+                    pxl.rChannel = (UInt8)(255.0L - factor * 55.0L);  // 255 to 200
+                    pxl.gChannel = (UInt8)(255.0L - factor * 55.0L);  // 255 to 200  
+                    pxl.bChannel = (UInt8)(255.0L - factor * 100.0L); // 255 to 155
+                } else if (t < 0.5L) {
+                    // Light blue transition zone
+                    long double factor = (t - 0.2L) / 0.3L; // 0 to 1
+                    pxl.rChannel = (UInt8)(200.0L - factor * 150.0L); // 200 to 50
+                    pxl.gChannel = (UInt8)(200.0L - factor * 120.0L); // 200 to 80
+                    pxl.bChannel = (UInt8)(155.0L + factor * 100.0L); // 155 to 255
+                } else {
+                    // Deep blue range
+                    long double factor = (t - 0.5L) / 0.5L; // 0 to 1
+                    pxl.rChannel = (UInt8)(50.0L - factor * 50.0L);   // 50 to 0
+                    pxl.gChannel = (UInt8)(80.0L - factor * 80.0L);   // 80 to 0
+                    pxl.bChannel = (UInt8)(255.0L - factor * 155.0L); // 255 to 100
+                }
             }
             
             pxl.aChannel = 255;

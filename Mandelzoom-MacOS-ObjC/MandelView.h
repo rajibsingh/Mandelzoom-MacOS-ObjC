@@ -16,6 +16,10 @@
     @property (strong) IBOutlet NSImageView *imageView;
     @property (strong) IBOutlet SelectionRectangleView *selectionOverlayView;
     @property (strong) NSTextField *renderTimeLabel;
+    @property (strong) NSView *infoPanel;
+    @property (strong) NSTextField *xRangeLabel;
+    @property (strong) NSTextField *yRangeLabel;
+    @property (strong) NSTextField *magnificationLabel;
 
 -(void) setImage;
 -(void) refresh;
